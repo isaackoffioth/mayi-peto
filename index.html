@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="fr" data-lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mayi Peto — Filtre à eau low-cost pour la RDC</title>
+<meta name="description" content="Mayi Peto : un purificateur d'eau à gravité, fabriqué avec des matériaux locaux, pour les communautés rurales de la République démocratique du Congo. Projet Engineers Without Borders — IMT Atlantique.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+<link rel="stylesheet" href="css/style.css">
+<script>
+  // Langue et thème avant affichage (évite le clignotement)
+  (function () {
+    var l = null, t = null;
+    try { l = localStorage.getItem('mp-lang'); t = localStorage.getItem('mp-theme'); } catch (e) {}
+    if (!l) l = (navigator.language || 'fr').slice(0, 2) === 'fr' ? 'fr' : 'en';
+    document.documentElement.setAttribute('data-lang', l);
+    document.documentElement.lang = l;
+    if (t) document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+</head>
+<body>
+
+<!-- ============ Motifs SVG partagés (textures des matériaux) ============ -->
+<svg class="hidden-defs" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="g-water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9ad6ec"/><stop offset="1" stop-color="#3b93bf"/>
+    </linearGradient>
+    <linearGradient id="g-mud" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b98d5a"/><stop offset="1" stop-color="#7a5332"/>
+    </linearGradient>
+    <linearGradient id="g-drum" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1d6f96"/><stop offset=".45" stop-color="#3c9cc6"/><stop offset="1" stop-color="#185f80"/>
+    </linearGradient>
+    <linearGradient id="g-bucket" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#d9d4c7"/><stop offset=".5" stop-color="#f5f2ea"/><stop offset="1" stop-color="#cbc5b6"/>
+    </linearGradient>
+    <pattern id="p-gravel" width="16" height="14" patternUnits="userSpaceOnUse">
+      <rect width="16" height="14" fill="#8f949b"/>
+      <ellipse cx="4" cy="4" rx="3.6" ry="2.8" fill="#b4b8be"/>
+      <ellipse cx="12" cy="9" rx="3.4" ry="3" fill="#a3a8ae"/>
+      <ellipse cx="3" cy="11" rx="2.4" ry="2" fill="#71767d"/>
+      <ellipse cx="12" cy="2" rx="2" ry="1.6" fill="#6c7178"/>
+    </pattern>
+    <pattern id="p-coarse" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="8" fill="#d6b37a"/>
+      <circle cx="2" cy="2" r="1.3" fill="#b48d55"/><circle cx="6" cy="5" r="1.2" fill="#ecd3a2"/><circle cx="3" cy="7" r=".9" fill="#a17a45"/>
+    </pattern>
+    <pattern id="p-fine" width="5" height="5" patternUnits="userSpaceOnUse">
+      <rect width="5" height="5" fill="#ecd6a6"/>
+      <circle cx="1" cy="1" r=".55" fill="#c6a46b"/><circle cx="3.5" cy="3" r=".5" fill="#d8bb84"/>
+    </pattern>
+    <pattern id="p-charcoal" width="12" height="10" patternUnits="userSpaceOnUse">
+      <rect width="12" height="10" fill="#262626"/>
+      <path d="M1 2 L5 1 L4 5 Z" fill="#474747"/><path d="M7 5 L11 4 L10 9 L6 8 Z" fill="#3a3a3a"/><path d="M1 7 L3 6 L3 9 Z" fill="#555"/>
+    </pattern>
+    <pattern id="p-cloth" width="6" height="6" patternUnits="userSpaceOnUse">
+      <rect width="6" height="6" fill="#f3efe4"/>
+      <path d="M0 0 L6 6 M6 0 L0 6" stroke="#c9bfa9" stroke-width=".7"/>
+    </pattern>
+    <pattern id="p-pagne" width="14" height="14" patternUnits="userSpaceOnUse">
+      <rect width="14" height="14" fill="#e3a23b"/>
+      <circle cx="7" cy="7" r="4" fill="#c2502f"/><circle cx="7" cy="7" r="1.6" fill="#f3e6cb"/>
+      <circle cx="0" cy="0" r="2" fill="#0e6a8f"/><circle cx="14" cy="14" r="2" fill="#0e6a8f"/><circle cx="14" cy="0" r="2" fill="#0e6a8f"/><circle cx="0" cy="14" r="2" fill="#0e6a8f"/>
+    </pattern>
+    <pattern id="p-iron" width="12" height="12" patternUnits="userSpaceOnUse">
+      <rect width="12" height="12" fill="#6b4431"/>
+      <path d="M1 3 L10 1 M2 9 L11 6 M0 6 L5 11" stroke="#a6603d" stroke-width="1.4" stroke-linecap="round"/>
+    </pattern>
+    <pattern id="p-bio" width="6" height="4" patternUnits="userSpaceOnUse">
+      <rect width="6" height="4" fill="#5e8f3e"/><circle cx="2" cy="2" r=".9" fill="#86b35a"/>
+    </pattern>
+
+    <!-- ===== Système Mayi Peto complet (réutilisé dans l'accueil et la page filtre) ===== -->
+    <symbol id="mp-system" viewBox="0 0 760 600">
+      <!-- sol -->
+      <rect x="0" y="580" width="760" height="20" fill="#b9673f" opacity=".35"/>
+      <!-- Étape 1 : seau de décantation + moringa -->
+      <g>
+        <rect x="70" y="220" width="10" height="360" fill="#7a5a3a"/><rect x="190" y="220" width="10" height="360" fill="#7a5a3a"/>
+        <rect x="56" y="210" width="158" height="12" rx="3" fill="#94704b"/>
+        <path d="M58 70 L212 70 L200 208 L70 208 Z" fill="url(#g-bucket)" stroke="#8f8878" stroke-width="2"/>
+        <path d="M66 100 L204 100 L200 160 L68 160 Z" fill="url(#g-mud)" opacity=".55"/>
+        <path d="M68 160 L200 160 L198 186 L69 186 Z" fill="#b48a5c" opacity=".75"/>
+        <path d="M69 186 L198 186 L196 206 L70 206 Z" fill="#6e4a2a"/>
+        <rect x="52" y="62" width="166" height="10" rx="4" fill="#cfc8b6" stroke="#8f8878"/>
+        <circle cx="95" cy="200" r="3" fill="#3f5a28"/><circle cx="120" cy="198" r="3" fill="#3f5a28"/><circle cx="160" cy="201" r="3" fill="#3f5a28"/>
+        <!-- graines de moringa -->
+        <g transform="translate(20 20)">
+          <path d="M30 30 q14 -18 28 0 q-14 18 -28 0z" fill="#8a6b3a"/>
+          <path d="M44 22 v16" stroke="#e8d9b0" stroke-width="2"/>
+        </g>
+      </g>
+      <!-- flèche « verser » -->
+      <path d="M214 92 C 270 60, 330 70, 360 118" fill="none" stroke="#c2502f" stroke-width="4" stroke-dasharray="8 6" marker-end="url(#arrow)"/>
+      <!-- Plateforme surélevée -->
+      <rect x="262" y="512" width="236" height="14" rx="3" fill="#94704b"/>
+      <rect x="276" y="526" width="12" height="54" fill="#7a5a3a"/><rect x="472" y="526" width="12" height="54" fill="#7a5a3a"/>
+      <!-- Fût (étape 2) -->
+      <rect x="280" y="150" width="200" height="362" rx="10" fill="url(#g-drum)"/>
+      <rect x="286" y="154" width="188" height="354" rx="6" fill="#e8f3f7"/>
+      <!-- réservoir d'eau versée -->
+      <rect x="286" y="160" width="188" height="40" fill="url(#g-water)" opacity=".55"/>
+      <!-- plaque de diffusion -->
+      <rect x="286" y="198" width="188" height="6" fill="#4d6470"/>
+      <g fill="#e8f3f7"><circle cx="300" cy="201" r="1.6"/><circle cx="320" cy="201" r="1.6"/><circle cx="340" cy="201" r="1.6"/><circle cx="360" cy="201" r="1.6"/><circle cx="380" cy="201" r="1.6"/><circle cx="400" cy="201" r="1.6"/><circle cx="420" cy="201" r="1.6"/><circle cx="440" cy="201" r="1.6"/><circle cx="460" cy="201" r="1.6"/></g>
+      <!-- eau stagnante -->
+      <rect x="286" y="204" width="188" height="31" fill="url(#g-water)" opacity=".8"/>
+      <!-- couches -->
+      <rect x="286" y="235" width="188" height="180" fill="url(#p-fine)"/>
+      <rect x="286" y="235" width="188" height="5" fill="url(#p-bio)"/>
+      <rect x="286" y="415" width="188" height="6" fill="url(#p-cloth)"/>
+      <rect x="286" y="421" width="188" height="30" fill="url(#p-charcoal)"/>
+      <rect x="286" y="451" width="188" height="24" fill="url(#p-coarse)"/>
+      <rect x="286" y="475" width="188" height="33" fill="url(#p-gravel)"/>
+      <!-- tuyau collecteur perforé -->
+      <rect x="300" y="488" width="186" height="9" rx="4" fill="#e6e1d3" stroke="#6b6b6b"/>
+      <g fill="#6b6b6b"><circle cx="315" cy="492" r="1.3"/><circle cx="335" cy="492" r="1.3"/><circle cx="355" cy="492" r="1.3"/><circle cx="375" cy="492" r="1.3"/><circle cx="395" cy="492" r="1.3"/><circle cx="415" cy="492" r="1.3"/><circle cx="435" cy="492" r="1.3"/><circle cx="455" cy="492" r="1.3"/></g>
+      <!-- sortie surélevée -->
+      <path d="M484 492 H512 V214 H586 V352" fill="none" stroke="#e6e1d3" stroke-width="10" stroke-linejoin="round"/>
+      <path d="M484 492 H512 V214 H586 V352" fill="none" stroke="#6b6b6b" stroke-width="1.5" stroke-dasharray="0" opacity=".5"/>
+      <line x1="500" y1="204" x2="530" y2="204" stroke="#1d6f96" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <!-- couvercle -->
+      <rect x="272" y="138" width="216" height="15" rx="5" fill="#155a79"/>
+      <!-- pagne pré-filtre sur l'ouverture -->
+      <path d="M332 128 Q380 152 428 128 L428 136 Q380 160 332 136 Z" fill="url(#p-pagne)" stroke="#8a3a20" stroke-width="1"/>
+      <!-- Étape 3 : stockage sûr -->
+      <rect x="530" y="518" width="180" height="10" rx="3" fill="#94704b"/>
+      <rect x="544" y="528" width="10" height="52" fill="#7a5a3a"/><rect x="686" y="528" width="10" height="52" fill="#7a5a3a"/>
+      <path d="M540 362 L702 362 L692 516 L550 516 Z" fill="url(#g-bucket)" stroke="#8f8878" stroke-width="2"/>
+      <path d="M546 410 L697 410 L692 514 L551 514 Z" fill="url(#g-water)" opacity=".75"/>
+      <rect x="534" y="352" width="174" height="12" rx="4" fill="#cfc8b6" stroke="#8f8878"/>
+      <!-- robinet -->
+      <rect x="694" y="488" width="26" height="9" rx="2" fill="#2e86b5"/><rect x="712" y="480" width="8" height="10" rx="2" fill="#2e86b5"/><rect x="714" y="497" width="5" height="8" fill="#2e86b5"/>
+      <circle class="drip" cx="716.5" cy="510" r="3" fill="#3b93bf"/>
+      <circle class="drip d2" cx="716.5" cy="510" r="3" fill="#3b93bf"/>
+      <path d="M700 548 L734 548 L730 578 L704 578 Z" fill="#d7eef7" stroke="#7aa9bf" stroke-width="1.5"/>
+      <rect x="704" y="560" width="26" height="17" fill="#7cc6e3" opacity=".8"/>
+      <!-- SODIS sur toit -->
+      <g>
+        <path d="M548 186 L742 132 L742 142 L548 196 Z" fill="#9aa4ab"/>
+        <path d="M548 186 L742 132" stroke="#c7cfd4" stroke-width="2" stroke-dasharray="10 6"/>
+        <g transform="rotate(-15.5 645 160)">
+          <rect x="570" y="150" width="46" height="16" rx="7" fill="#bfe6f5" stroke="#5aa8c9" stroke-width="1.5" opacity=".95"/>
+          <rect x="616" y="154" width="8" height="8" rx="2" fill="#2e86b5"/>
+          <rect x="632" y="150" width="46" height="16" rx="7" fill="#bfe6f5" stroke="#5aa8c9" stroke-width="1.5" opacity=".95"/>
+          <rect x="678" y="154" width="8" height="8" rx="2" fill="#2e86b5"/>
+        </g>
+        <g transform="translate(700 52)">
+          <g class="sunrays" stroke="#f2a33a" stroke-width="3" stroke-linecap="round">
+            <line x1="0" y1="-34" x2="0" y2="-26"/><line x1="0" y1="34" x2="0" y2="26"/><line x1="-34" y1="0" x2="-26" y2="0"/><line x1="34" y1="0" x2="26" y2="0"/>
+            <line x1="-24" y1="-24" x2="-18" y2="-18"/><line x1="24" y1="24" x2="18" y2="18"/><line x1="-24" y1="24" x2="-18" y2="18"/><line x1="24" y1="-24" x2="18" y2="-18"/>
+          </g>
+          <circle r="18" fill="#f2b83a"/>
+        </g>
+        <path d="M640 352 C 640 280, 620 240, 625 205" fill="none" stroke="#f2a33a" stroke-width="3" stroke-dasharray="5 6" marker-end="url(#arrow-sun)"/>
+      </g>
+    </symbol>
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#c2502f"/></marker>
+    <marker id="arrow-sun" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#f2a33a"/></marker>
+  </defs>
+</svg>
+
+<!-- ============ En-tête ============ -->
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#accueil" aria-label="Mayi Peto">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 4C22 18 12 28 12 40a20 20 0 0 0 40 0C52 28 42 18 32 4z" fill="#0e6a8f"/><path d="M20 40h24" stroke="#f3e6cb" stroke-width="4" stroke-linecap="round"/><path d="M22 47h20" stroke="#d9b77e" stroke-width="4" stroke-linecap="round"/><path d="M25 54h14" stroke="#2b2b2b" stroke-width="4" stroke-linecap="round"/><circle cx="26" cy="30" r="4" fill="#7cc6e3"/></svg>
+      Mayi Peto
+    </a>
+    <nav class="nav" aria-label="Navigation">
+      <a href="#accueil" data-page="accueil"><span class="fr">Accueil</span><span class="en">Home</span></a>
+      <a href="#filtre" data-page="filtre"><span class="fr">Le filtre</span><span class="en">The filter</span></a>
+      <a href="#simulateur" data-page="simulateur"><span class="fr">Simulateur</span><span class="en">Simulator</span></a>
+      <a href="#sensibilisation" data-page="sensibilisation"><span class="fr">Sensibilisation</span><span class="en">Awareness</span></a>
+      <a href="#carte" data-page="carte"><span class="fr">Carte des points d'eau</span><span class="en">Water point map</span></a>
+      <a href="#projet" data-page="projet"><span class="fr">Le projet</span><span class="en">The project</span></a>
+    </nav>
+    <div class="tools">
+      <button class="chip-btn" id="lang-btn" type="button" aria-label="Changer de langue / Change language"><span class="fr">EN</span><span class="en">FR</span></button>
+      <button class="chip-btn" id="theme-btn" type="button" aria-label="Thème clair/sombre">◐</button>
+    </div>
+  </div>
+</header>
+
+<main>
+<!-- ======================================================= -->
+<!-- ACCUEIL                                                  -->
+<!-- ======================================================= -->
+<div class="page" id="p-accueil">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow">Engineers Without Borders · IMT Atlantique · FISE A2 2026-2027</span>
+        <h1 class="fr">De l'eau trouble à l'eau <span class="accent">peto</span>.</h1>
+        <h1 class="en">From muddy water to <span class="accent">peto</span> water.</h1>
+        <p class="lead fr"><b>Mayi Peto</b> (« eau propre » en lingala) est un purificateur d'eau qui fonctionne par simple gravité. Il se fabrique avec ce que l'on trouve au marché ou au village : seaux, sable, gravier, charbon de bois, pagne et graines de moringa. Il est conçu pour les communautés rurales de la République démocratique du Congo, coûte environ <b>15 $</b> et n'a besoin d'aucune électricité.</p>
+        <p class="lead en"><b>Mayi Peto</b> (“clean water” in Lingala) is a water purifier that runs on gravity alone. It is built from things found at the market or in the village: buckets, sand, gravel, charcoal, wax-print cloth and moringa seeds. It is designed for rural communities in the Democratic Republic of the Congo, costs about <b>$15</b> and needs no electricity at all.</p>
+        <div class="cta">
+          <a class="btn" href="#filtre"><span class="fr">Découvrir le filtre</span><span class="en">Discover the filter</span> →</a>
+          <a class="btn ghost" href="#simulateur"><span class="fr">Construire mon filtre</span><span class="en">Build my own filter</span></a>
+          <a class="btn ghost" href="#carte"><span class="fr">Carte des points d'eau</span><span class="en">Water point map</span></a>
+        </div>
+      </div>
+      <div class="hero-art">
+        <svg viewBox="0 0 760 600" role="img" aria-label="Système Mayi Peto : seau de décantation, fût filtrant et seau de stockage"><use href="#mp-system"/></svg>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" style="padding-top:8px">
+    <div class="wrap">
+      <div class="stats">
+        <div class="stat"><div class="num"><span class="fr">2,2 milliards</span><span class="en">2.2 billion</span></div><div class="lbl fr">de personnes sans eau potable gérée en toute sécurité dans le monde (2022)</div><div class="lbl en">people lack safely managed drinking water worldwide (2022)</div><div class="src">WHO/UNICEF JMP, 2023</div></div>
+        <div class="stat"><div class="num">33 <span class="fr">millions</span><span class="en">million</span></div><div class="lbl fr">d'habitants ruraux de RDC sans accès à une eau de qualité</div><div class="lbl en">rural residents of the DRC without access to quality water</div><div class="src">UNICEF RDC</div></div>
+        <div class="stat"><div class="num"><span class="fr">≈ 1 %</span><span class="en">≈ 1%</span></div><div class="lbl fr">d'accès à l'électricité en zone rurale en RDC (2015-2023) → la gravité s'impose</div><div class="lbl en">rural electricity access in the DRC (2015-2023) → gravity is the way</div><div class="src">World Bank, 2026</div></div>
+        <div class="stat"><div class="num"><span class="fr">505 000</span><span class="en">505,000</span></div><div class="lbl fr">décès par diarrhée chaque année liés à une eau de boisson contaminée</div><div class="lbl en">diarrhoeal deaths each year caused by contaminated drinking water</div><div class="src">WHO, fact sheet “Drinking-water”</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block alt">
+    <div class="wrap">
+      <span class="eyebrow"><span class="fr">Étape 1 · Comprendre le problème</span><span class="en">Step 1 · Understand the problem</span></span>
+      <h2 class="fr">Pourquoi un filtre de plus ?</h2><h2 class="en">Why another filter?</h2>
+      <div class="grid g3" style="margin-top:20px">
+        <div class="card"><h3 class="fr">Qui est touché ?</h3><h3 class="en">Who is affected?</h3>
+          <p class="fr">Les foyers ruraux qui boivent l'eau des rivières, des puits ouverts ou des sources non protégées. Surtout les femmes et les filles, qui vont chercher l'eau, les enfants de moins de 5 ans, les plus exposés à la diarrhée, et les familles déplacées dans l'Est.</p>
+          <p class="en">Rural households drinking from rivers, open wells or unprotected springs. Above all the women and girls who fetch the water, children under 5, who are most exposed to diarrhoea, and displaced families in the East.</p></div>
+        <div class="card"><h3 class="fr">Pourquoi est-ce un problème ?</h3><h3 class="en">Why is it a problem?</h3>
+          <p class="fr">Une eau contaminée par des matières fécales transmet la diarrhée, le choléra et la typhoïde. Les malades perdent des journées de travail, les enfants manquent l'école et les familles dépensent pour des soins.</p>
+          <p class="en">Water contaminated by faeces spreads diarrhoea, cholera and typhoid. People lose working days, children miss school and families pay for healthcare.</p></div>
+        <div class="card"><h3 class="fr">Ce qui existe déjà</h3><h3 class="en">What already exists</h3>
+          <p class="fr">L'ébullition, les comprimés de chlore, les filtres en céramique, les pailles et filtres importés, et les forages construits par les ONG.</p>
+          <p class="en">Boiling, chlorine tablets, ceramic pot filters, imported straws and filters, and boreholes built by NGOs.</p></div>
+        <div class="card"><h3 class="fr">Pourquoi ça ne suffit pas</h3><h3 class="en">Why it is not enough</h3>
+          <p class="fr">Faire bouillir l'eau coûte du bois ou du charbon et accélère la déforestation. Le chlore dépend d'un approvisionnement régulier et son goût est souvent rejeté. Les filtres importés sont chers et leurs pièces introuvables. Enfin, beaucoup de forages tombent en panne faute d'entretien.</p>
+          <p class="en">Boiling costs wood or charcoal and speeds up deforestation. Chlorine depends on a steady supply and its taste is often rejected. Imported filters are expensive and their spare parts are hard to find. And many boreholes break down for lack of maintenance.</p></div>
+        <div class="card"><h3 class="fr">Ce dont les usagers ont besoin</h3><h3 class="en">What users really need</h3>
+          <p class="fr">Un système bon marché, réparable sur place et sans électricité, avec une eau au goût accepté et des consignes en pictogrammes. Il doit aussi fournir assez d'eau : environ 7,5 L par personne et par jour pour boire et cuisiner.</p>
+          <p class="en">A cheap system that can be repaired locally and needs no electricity, with water that tastes acceptable and picture-based instructions. It must also supply enough water: about 7.5 L per person per day for drinking and cooking.</p></div>
+        <div class="card" style="background:var(--teal-soft)"><h3 class="fr">Notre réponse</h3><h3 class="en">Our answer</h3>
+          <p class="fr">Mayi Peto combine <b>plusieurs barrières</b> : décantation au moringa, filtre biosable « intelligent » et désinfection au soleil ou au chlore. Le tout est construit et entretenu par une coopérative locale.</p>
+          <p class="en">Mayi Peto combines <b>several barriers</b>: moringa settling, a “smart” biosand filter and disinfection by sunlight or chlorine. The units are built and maintained by a local cooperative.</p>
+          <a class="btn small" href="#filtre"><span class="fr">Voir le design</span><span class="en">See the design</span> →</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap">
+      <span class="eyebrow"><span class="fr">Innovation</span><span class="en">Innovation</span></span>
+      <h2 class="fr">Ce qui rend Mayi Peto différent</h2><h2 class="en">What makes Mayi Peto different</h2>
+      <div class="grid g4" style="margin-top:20px">
+        <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 21h18M5 21V10l7-6 7 6v11"/><path d="M9 21v-6h6v6"/></svg></div>
+          <h3 class="fr">100 % matériaux locaux</h3><h3 class="en">100% local materials</h3>
+          <p class="fr">Fût alimentaire recyclé, sable de rivière tamisé, <i>makala</i> (charbon), pagne, moringa. Rien à importer.</p>
+          <p class="en">Recycled food-grade drum, sieved river sand, <i>makala</i> (charcoal), wax-print cloth, moringa. Nothing to import.</p></div>
+        <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V8h6v12M10 14h10v6"/><path d="M7 8V4"/></svg></div>
+          <h3 class="fr">Sortie surélevée</h3><h3 class="en">Raised outlet</h3>
+          <p class="fr">Le tuyau remonte 5 cm au-dessus du sable : le lit reste toujours immergé et le <b>biofilm</b> qui mange les germes ne meurt pas.</p>
+          <p class="en">The outlet pipe rises 5 cm above the sand, so the bed always stays submerged and the germ-eating <b>biofilm</b> survives.</p></div>
+        <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div>
+          <h3 class="fr">Multi-barrières</h3><h3 class="en">Multi-barrier</h3>
+          <p class="fr">Coagulation, puis filtration, puis désinfection : le système vise les cibles de performance de l'OMS pour le traitement de l'eau à domicile.</p>
+          <p class="en">Coagulation, then filtration, then disinfection: the system aims at the WHO performance targets for household water treatment.</p></div>
+        <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M3 20c0-3 2.5-5 5-5s5 2 5 5M11 20c0-3 2.5-5 5-5s5 2 5 5"/></svg></div>
+          <h3 class="fr">Modèle coopératif</h3><h3 class="en">Cooperative model</h3>
+          <p class="fr">Des « techniciennes Mayi Peto », formées dans une coopérative de femmes, fabriquent, vendent et entretiennent les filtres. Cela crée des emplois locaux.</p>
+          <p class="en">“Mayi Peto technicians”, trained in a women's cooperative, build, sell and maintain the filters. This creates local jobs.</p></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ======================================================= -->
+<!-- LE FILTRE                                                -->
+<!-- ======================================================= -->
+<div class="page" id="p-filtre">
+  <section class="page-head">
+    <div class="wrap">
+      <span class="eyebrow"><span class="fr">Étape 2 · Notre solution</span><span class="en">Step 2 · Our solution</span></span>
+      <h2 class="fr">Le purificateur Mayi Peto</h2><h2 class="en">The Mayi Peto purifier</h2>
+      <p class="lead fr">Trois étapes, trois contenants, aucune électricité. Une famille de 5 personnes obtient 30 à 40 L d'eau traitée par jour. Le design améliore le filtre « bouteille » classique (gravier, sable, charbon, coton) en reprenant les principes du filtre biosable.</p>
+      <p class="lead en">Three stages, three containers, no electricity. A family of 5 gets 30–40 L of treated water per day. The design improves the classic “bottle” filter (gravel, sand, charcoal, cotton) using the principles of the biosand filter.</p>
+      <div class="no-print" style="margin-top:12px"><button class="btn small ghost" type="button" onclick="window.print()"><span class="fr">🖨 Imprimer la fiche de construction</span><span class="en">🖨 Print the build sheet</span></button></div>
+    </div>
+  </section>
+
+  <section class="block" style="padding-top:24px">
+    <div class="wrap design-grid">
+      <div class="diagram">
+        <svg viewBox="0 0 760 600" role="img" aria-label="Schéma en coupe du système Mayi Peto">
+          <use href="#mp-system"/>
+          <g font-family="Inter, sans-serif" font-size="15" font-weight="700" text-anchor="middle">
+            <!-- lignes de rappel -->
+            <g style="stroke:var(--ink-2)" stroke-width="1.4" opacity=".8">
+              <line x1="135" y1="40" x2="135" y2="68"/>
+              <line x1="380" y1="104" x2="380" y2="132"/>
+              <line x1="246" y1="190" x2="286" y2="200"/>
+              <line x1="246" y1="232" x2="286" y2="222"/>
+              <line x1="246" y1="320" x2="286" y2="320"/>
+              <line x1="246" y1="430" x2="286" y2="432"/>
+              <line x1="246" y1="485" x2="286" y2="485"/>
+              <line x1="536" y1="300" x2="514" y2="300"/>
+              <line x1="380" y1="552" x2="380" y2="526"/>
+              <line x1="620" y1="330" x2="620" y2="352"/>
+              <line x1="600" y1="120" x2="600" y2="160"/>
+            </g>
+            <g fill="#c2502f" stroke="#fff" stroke-width="1.5">
+              <circle cx="135" cy="28" r="13"/><circle cx="380" cy="92" r="13"/><circle cx="234" cy="188" r="13"/><circle cx="234" cy="234" r="13"/><circle cx="234" cy="320" r="13"/><circle cx="234" cy="430" r="13"/><circle cx="234" cy="486" r="13"/><circle cx="550" cy="300" r="13"/><circle cx="380" cy="565" r="13"/><circle cx="620" cy="318" r="13"/><circle cx="600" cy="108" r="13"/>
+            </g>
+            <g fill="#fff">
+              <text x="135" y="33">1</text><text x="380" y="97">2</text><text x="234" y="193">3</text><text x="234" y="239">4</text><text x="234" y="325">5</text><text x="234" y="435">6</text><text x="234" y="491">7</text><text x="550" y="305">8</text><text x="380" y="570">9</text><text x="620" y="323" font-size="13">10</text><text x="600" y="113" font-size="13">11</text>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <div>
+        <ol class="legend-list">
+          <li><span class="n">1</span><div><b class="fr">Seau de décantation + moringa</b><b class="en">Settling bucket + moringa</b><span class="d fr">Seau de 20 L. On y ajoute des graines de moringa broyées (coagulant naturel) puis on laisse reposer 1 à 2 h. La boue tombe au fond.</span><span class="d en">20 L bucket. Crushed moringa seeds (a natural coagulant) are added, then the water rests for 1–2 h. The mud sinks to the bottom.</span></div></li>
+          <li><span class="n">2</span><div><b class="fr">Pré-filtre en pagne</b><b class="en">Wax-print cloth pre-filter</b><span class="d fr">Un pagne en coton plié en 4 couches. Il retient les particules, les larves et le plancton qui porte le vibrion du choléra.</span><span class="d en">Cotton wax-print cloth folded 4 times. It catches particles, larvae and the plankton that carries cholera bacteria.</span></div></li>
+          <li><span class="n">3</span><div><b class="fr">Couvercle + plaque de diffusion</b><b class="en">Lid + diffuser plate</b><span class="d fr">Une plaque percée (≈ 50 trous de 3 mm) répartit l'eau sans creuser le sable. Le couvercle empêche toute contamination.</span><span class="d en">A perforated plate (≈ 50 holes of 3 mm) spreads the water without digging into the sand. The lid keeps contamination out.</span></div></li>
+          <li><span class="n">4</span><div><b class="fr">5 cm d'eau + biofilm</b><b class="en">5 cm of water + biofilm</b><span class="d fr">Au bout de 2 à 3 semaines, une couche biologique (<i>schmutzdecke</i>) se forme à la surface du sable. Elle piège et dévore les germes.</span><span class="d en">After 2–3 weeks a biological layer (<i>schmutzdecke</i>) grows on top of the sand. It traps and eats germs.</span></div></li>
+          <li><span class="n">5</span><div><b class="fr">Sable fin — 30 cm</b><b class="en">Fine sand — 30 cm</b><span class="d fr">Grains de 0,15 à 0,35 mm, lavés et tamisés. C'est le cœur du filtre : filtration mécanique et biologique.</span><span class="d en">0.15–0.35 mm grains, washed and sieved. The heart of the filter: mechanical and biological filtration.</span></div></li>
+          <li><span class="n">6</span><div><b class="fr">Tissu séparateur + charbon (makala) — 5 cm</b><b class="en">Cloth separator + charcoal (makala) — 5 cm</b><span class="d fr">Charbon de bois concassé (1 à 4 mm) et rincé. Il améliore le goût et l'odeur et retient une partie des matières organiques.</span><span class="d en">Crushed charcoal (1–4 mm), rinsed. It improves taste and smell and holds back some organic matter.</span></div></li>
+          <li><span class="n">7</span><div><b class="fr">Sable grossier 4 cm + gravier 5 cm</b><b class="en">Coarse sand 4 cm + gravel 5 cm</b><span class="d fr">Couches de support graduées : elles empêchent le sable de partir. Le gravier entoure un tuyau collecteur percé.</span><span class="d en">Graded support layers that keep the sand in place. The gravel surrounds a perforated collector pipe.</span></div></li>
+          <li><span class="n">8</span><div><b class="fr">Sortie surélevée</b><b class="en">Raised outlet</b><span class="d fr">Le tuyau remonte au niveau de l'eau stagnante. Le sable ne sèche jamais, même filtre arrêté, et le débit reste limité.</span><span class="d en">The pipe rises to the standing-water level. The sand never dries out, even when the filter is idle, and the flow stays limited.</span></div></li>
+          <li><span class="n">9</span><div><b class="fr">Plateforme surélevée</b><b class="en">Raised platform</b><span class="d fr">Elle protège des inondations et du ruissellement, et laisse de la place sous le robinet pour un récipient.</span><span class="d en">It protects against floods and runoff, and leaves room under the tap for a container.</span></div></li>
+          <li><span class="n">10</span><div><b class="fr">Stockage sûr + chlore</b><b class="en">Safe storage + chlorine</b><span class="d fr">Seau fermé avec robinet : on ne trempe jamais un gobelet dedans. On ajoute une dose de chlore (comprimé ou eau de Javel diluée) et on attend 30 min.</span><span class="d en">Closed bucket with a tap: nobody dips a cup into it. A dose of chlorine (tablet or diluted bleach) is added, then 30 min of waiting.</span></div></li>
+          <li><span class="n">11</span><div><b class="fr">Option SODIS</b><b class="en">SODIS option</b><span class="d fr">Si l'on n'a pas de chlore : bouteilles PET transparentes posées 6 h en plein soleil sur une tôle (2 jours par temps couvert).</span><span class="d en">No chlorine available: clear PET bottles left 6 h in full sun on a metal roof (2 days if cloudy).</span></div></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="block alt">
+    <div class="wrap">
+      <h2 class="fr">Les trois étapes</h2><h2 class="en">The three stages</h2>
+      <div class="stage-cards" style="margin-top:18px">
+        <div class="card stage s1">
+          <span class="tag"><span class="fr">Étape 1 · Pré-traitement</span><span class="en">Stage 1 · Pre-treatment</span></span>
+          <h3 style="margin-top:8px" class="fr">Décanter et clarifier</h3><h3 style="margin-top:8px" class="en">Settle and clarify</h3>
+          <ol class="fr"><li>Remplir le seau 1 d'eau brute.</li><li>Ajouter environ 1 graine de moringa broyée par litre d'eau très trouble. Ajuster la dose avec un test en bocal.</li><li>Remuer vite 1 min, puis lentement 5 min.</li><li>Laisser reposer 1 à 2 h, couvercle fermé.</li><li>Verser doucement l'eau du dessus à travers le pagne, sans remuer la boue.</li></ol>
+          <ol class="en"><li>Fill bucket 1 with raw water.</li><li>Add about 1 crushed moringa seed per litre of very turbid water. Adjust the dose with a jar test.</li><li>Stir fast for 1 min, then slowly for 5 min.</li><li>Let it rest 1–2 h with the lid closed.</li><li>Gently pour the top water through the cloth, without stirring up the sludge.</li></ol>
+        </div>
+        <div class="card stage">
+          <span class="tag"><span class="fr">Étape 2 · Filtration</span><span class="en">Stage 2 · Filtration</span></span>
+          <h3 style="margin-top:8px" class="fr">Filtre biosable + charbon</h3><h3 style="margin-top:8px" class="en">Biosand + charcoal filter</h3>
+          <ul class="fr"><li>Fût alimentaire de 60 L posé sur une plateforme.</li><li>Lit filtrant de 45 cm : sable fin, tissu, charbon, sable grossier et gravier.</li><li>On verse 12 L par remplissage, 2 à 3 fois par jour.</li><li>Débit visé : 0,4 L/min au maximum.</li><li>Ne jamais laisser sécher le filtre plus de 48 h.</li></ul>
+          <ul class="en"><li>60 L food-grade drum on a platform.</li><li>45 cm filter bed: fine sand, cloth, charcoal, coarse sand and gravel.</li><li>12 L per fill, 2–3 fills per day.</li><li>Target flow: 0.4 L/min at most.</li><li>Never let the filter dry out for more than 48 h.</li></ul>
+        </div>
+        <div class="card stage s3">
+          <span class="tag"><span class="fr">Étape 3 · Désinfection</span><span class="en">Stage 3 · Disinfection</span></span>
+          <h3 style="margin-top:8px" class="fr">Désinfecter et bien stocker</h3><h3 style="margin-top:8px" class="en">Disinfect and store safely</h3>
+          <ul class="fr"><li><b>Chlore</b> : 1 comprimé pour 20 L (selon la notice) ou eau de Javel diluée, puis 30 min d'attente.</li><li><b>SODIS</b> : bouteilles PET de 2 L au plus, 6 h de plein soleil.</li><li>Le filtre clarifie d'abord l'eau, ce qui rend le chlore et le soleil <b>bien plus efficaces</b>.</li><li>Seau avec couvercle et robinet, nettoyé chaque semaine.</li></ul>
+          <ul class="en"><li><b>Chlorine</b>: 1 tablet per 20 L (follow the label) or diluted bleach, then 30 min of waiting.</li><li><b>SODIS</b>: PET bottles of 2 L at most, 6 h of full sun.</li><li>The filter clarifies the water first, which makes chlorine and sunlight <b>far more effective</b>.</li><li>Bucket with lid and tap, cleaned weekly.</li></ul>
+        </div>
+      </div>
+      <div class="callout" style="margin-top:20px">
+        <p class="fr" style="margin:0"><b>Honnêteté technique :</b> d'après l'OMS (2022), un filtre biosable domestique réduit les bactéries de 1 à 3 log, les virus de 0,5 à 2 log et les protozoaires de 2 à 4 log. C'est variable, et <b>une eau claire n'est pas forcément potable</b>. La désinfection (étape 3) est donc obligatoire, et l'on ne parlera d'eau « potable » qu'après des analyses en laboratoire (E. coli, turbidité, polluants locaux).</p>
+        <p class="en" style="margin:0"><b>Technical honesty:</b> according to WHO (2022), a household biosand filter reduces bacteria by 1–3 log, viruses by 0.5–2 log and protozoa by 2–4 log. That is variable, and <b>clear water is not necessarily safe water</b>. Disinfection (stage 3) is therefore mandatory, and the water will only be called “drinkable” after laboratory tests (E. coli, turbidity, local pollutants).</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap two-col">
+      <div>
+        <span class="eyebrow"><span class="fr">Faisabilité</span><span class="en">Feasibility</span></span>
+        <h2 class="fr">Coût des matériaux</h2><h2 class="en">Bill of materials</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th><span class="fr">Élément</span><span class="en">Item</span></th><th class="num"><span class="fr">Coût ($)</span><span class="en">Cost ($)</span></th></tr></thead>
+            <tbody>
+              <tr><td><span class="fr">Fût alimentaire 60 L recyclé (jamais un fût chimique)</span><span class="en">Recycled 60 L food-grade drum (never a chemical drum)</span></td><td class="num">5.00</td></tr>
+              <tr><td><span class="fr">Seau 20 L + couvercle (décantation)</span><span class="en">20 L bucket + lid (settling)</span></td><td class="num">2.00</td></tr>
+              <tr><td><span class="fr">Seau 20 L + couvercle (stockage)</span><span class="en">20 L bucket + lid (storage)</span></td><td class="num">2.00</td></tr>
+              <tr><td><span class="fr">Robinet plastique</span><span class="en">Plastic tap</span></td><td class="num">1.50</td></tr>
+              <tr><td><span class="fr">Tuyau 1,5 m + coudes</span><span class="en">1.5 m pipe + elbows</span></td><td class="num">2.00</td></tr>
+              <tr><td><span class="fr">Sable fin, sable grossier, gravier (collecte + lavage)</span><span class="en">Fine sand, coarse sand, gravel (collecting + washing)</span></td><td class="num">0.50</td></tr>
+              <tr><td><span class="fr">Charbon de bois (makala), 1 kg</span><span class="en">Charcoal (makala), 1 kg</span></td><td class="num">0.50</td></tr>
+              <tr><td><span class="fr">Pagne en coton (2 morceaux)</span><span class="en">Cotton wax-print cloth (2 pieces)</span></td><td class="num">1.00</td></tr>
+              <tr><td><span class="fr">Graines de moringa (souvent gratuites)</span><span class="en">Moringa seeds (often free)</span></td><td class="num">0.20</td></tr>
+              <tr><td><span class="fr">Bouteilles PET (récupération)</span><span class="en">PET bottles (reused)</span></td><td class="num">0.00</td></tr>
+            </tbody>
+            <tfoot><tr><td><span class="fr">Total initial</span><span class="en">Initial total</span></td><td class="num">≈ 14.70</td></tr>
+            <tr><td><span class="fr">Fonctionnement (chlore + charbon renouvelé)</span><span class="en">Running cost (chlorine + charcoal refill)</span></td><td class="num">≈ 0.70 / <span class="fr">mois</span><span class="en">month</span></td></tr></tfoot>
+          </table>
+        </div>
+        <p class="small muted" style="margin-top:8px"><span class="fr">Prix indicatifs, à vérifier sur un marché local et à convertir en francs congolais au taux du jour. Le temps de travail de la coopérative n'est pas inclus.</span><span class="en">Indicative prices, to be checked at a local market and converted into Congolese francs at the current rate. Cooperative labour is not included.</span></p>
+      </div>
+      <div>
+        <span class="eyebrow"><span class="fr">Caractéristiques</span><span class="en">Specifications</span></span>
+        <h2 class="fr">Performances visées</h2><h2 class="en">Target performance</h2>
+        <div class="table-wrap">
+          <table>
+            <tbody>
+              <tr><td><span class="fr">Dimensions du fût</span><span class="en">Drum size</span></td><td>≈ Ø 38 × 62 cm</td></tr>
+              <tr><td><span class="fr">Lit filtrant</span><span class="en">Filter bed</span></td><td>45 cm</td></tr>
+              <tr><td><span class="fr">Débit (filtre mûr)</span><span class="en">Flow (mature filter)</span></td><td>≤ 0,4 L/min (≈ 24 L/h)</td></tr>
+              <tr><td><span class="fr">Volume par jour</span><span class="en">Volume per day</span></td><td>30–40 L → <span class="fr">famille de 5</span><span class="en">family of 5</span></td></tr>
+              <tr><td><span class="fr">Maturation du biofilm</span><span class="en">Biofilm maturation</span></td><td><span class="fr">2–3 semaines</span><span class="en">2–3 weeks</span></td></tr>
+              <tr><td><span class="fr">Énergie</span><span class="en">Energy</span></td><td><span class="fr">0 — gravité</span><span class="en">0 — gravity</span></td></tr>
+              <tr><td><span class="fr">Durée de vie</span><span class="en">Lifetime</span></td><td><span class="fr">&gt; 5 ans (fût), sable réutilisable</span><span class="en">&gt; 5 years (drum), reusable sand</span></td></tr>
+              <tr><td><span class="fr">Objectif OMS</span><span class="en">WHO target</span></td><td><span class="fr">★ « protecteur » minimum, avec désinfection</span><span class="en">★ “protective” at least, with disinfection</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout info" style="margin-top:14px"><p class="small" style="margin:0"><span class="fr">Version communautaire (école, centre de santé) : même principe dans un fût de 200 L (≈ 100–150 L/jour). Version de démonstration en classe : bouteille de 1,5 L, comme sur l'image du projet. Comparez-les dans le </span><span class="en">Community version (school, health centre): same principle in a 200 L drum (≈ 100–150 L/day). Classroom demo version: a 1.5 L bottle, like the project picture. Compare them in the </span><a href="#simulateur"><span class="fr">simulateur</span><span class="en">simulator</span></a>.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block alt">
+    <div class="wrap">
+      <h2 class="fr">Fabrication en 8 étapes</h2><h2 class="en">Build it in 8 steps</h2>
+      <ol class="steps" style="margin-top:16px">
+        <li><b class="fr">Récupérer des contenants alimentaires</b><b class="en">Get food-grade containers</b><br><span class="fr">Jamais de fûts ayant contenu des produits chimiques ou des pesticides. Laver au savon puis au chlore.</span><span class="en">Never drums that held chemicals or pesticides. Wash with soap, then chlorine.</span></li>
+        <li><b class="fr">Percer et poser le collecteur</b><b class="en">Drill and fit the collector</b><br><span class="fr">Trou à 2 cm du fond. Tuyau percé de trous de 2 mm tous les 2 cm, enveloppé de tissu.</span><span class="en">Hole 2 cm above the bottom. Pipe with 2 mm holes every 2 cm, wrapped in cloth.</span></li>
+        <li><b class="fr">Monter la sortie surélevée</b><b class="en">Build the raised outlet</b><br><span class="fr">À l'extérieur, le tuyau remonte jusqu'à 5 cm au-dessus du futur niveau du sable, puis redescend vers le seau de stockage.</span><span class="en">Outside, the pipe rises to 5 cm above the future sand level, then goes down to the storage bucket.</span></li>
+        <li><b class="fr">Tamiser et laver les matériaux</b><b class="en">Sieve and wash the media</b><br><span class="fr">Une moustiquaire et un grillage servent de tamis. Laver jusqu'à ce que l'eau de rinçage soit claire. Concasser le charbon (1 à 4 mm) et le rincer.</span><span class="en">A mosquito net and a wire screen serve as sieves. Wash until the rinse water runs clear. Crush the charcoal (1–4 mm) and rinse it.</span></li>
+        <li><b class="fr">Remplir de bas en haut, dans l'eau</b><b class="en">Fill bottom-up, under water</b><br><span class="fr">Fût à moitié rempli d'eau pour éviter les bulles d'air. Mettre dans l'ordre : gravier 5 cm, sable grossier 4 cm, charbon 5 cm, disque de tissu, sable fin 30 cm. Niveler.</span><span class="en">Drum half full of water to avoid air pockets. Add in order: gravel 5 cm, coarse sand 4 cm, charcoal 5 cm, cloth disc, fine sand 30 cm. Level it.</span></li>
+        <li><b class="fr">Poser le diffuseur et le couvercle</b><b class="en">Fit the diffuser and lid</b><br><span class="fr">Plaque percée 5 cm au-dessus du sable, puis le couvercle.</span><span class="en">Perforated plate 5 cm above the sand, then the lid.</span></li>
+        <li><b class="fr">Tester le débit</b><b class="en">Test the flow</b><br><span class="fr">Verser 12 L et mesurer. Viser 0,4 L/min au maximum. Trop rapide : ajouter du sable fin. Trop lent : nettoyer la surface (« remuer et vider »).</span><span class="en">Pour 12 L and measure. Aim for 0.4 L/min at most. Too fast: add fine sand. Too slow: clean the surface (“swirl and dump”).</span></li>
+        <li><b class="fr">Laisser mûrir 2–3 semaines</b><b class="en">Let it mature 2–3 weeks</b><br><span class="fr">Utiliser le filtre chaque jour pour que le biofilm se développe, et toujours désinfecter l'eau en sortie.</span><span class="en">Use it daily so the biofilm grows, and always disinfect the water that comes out.</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap">
+      <h2 class="fr">Entretien</h2><h2 class="en">Maintenance</h2>
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead><tr><th><span class="fr">Quand</span><span class="en">When</span></th><th><span class="fr">Quoi</span><span class="en">What</span></th></tr></thead>
+          <tbody>
+            <tr><td><b><span class="fr">Chaque jour</span><span class="en">Daily</span></b></td><td><span class="fr">1 à 3 remplissages. Couvercle toujours fermé. Ne pas laisser sécher plus de 48 h.</span><span class="en">1–3 fills. Lid always closed. Never let it dry out for more than 48 h.</span></td></tr>
+            <tr><td><b><span class="fr">Chaque semaine</span><span class="en">Weekly</span></b></td><td><span class="fr">Laver le pagne et le seau de stockage. Vérifier le robinet.</span><span class="en">Wash the cloth and the storage bucket. Check the tap.</span></td></tr>
+            <tr><td><b><span class="fr">Débit divisé par 2</span><span class="en">Flow halved</span></b></td><td><span class="fr">« Remuer et vider » : agiter la surface de l'eau avec la main propre, retirer l'eau sale et recommencer 2 ou 3 fois.</span><span class="en">“Swirl and dump”: stir the water surface with a clean hand, scoop out the dirty water, repeat 2–3 times.</span></td></tr>
+            <tr><td><b><span class="fr">Tous les 3–6 mois</span><span class="en">Every 3–6 months</span></b></td><td><span class="fr">Remplacer le charbon. Contrôler le tuyau.</span><span class="en">Replace the charcoal. Check the pipe.</span></td></tr>
+            <tr><td><b><span class="fr">Tous les 6 mois</span><span class="en">Every 6 months</span></b></td><td><span class="fr">Test de l'eau (tube de turbidité + kit E. coli) avec le centre de santé partenaire.</span><span class="en">Water test (turbidity tube + E. coli kit) with the partner health centre.</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="block alt">
+    <div class="wrap">
+      <span class="eyebrow"><span class="fr">Solutions existantes</span><span class="en">Existing solutions</span></span>
+      <h2 class="fr">Comparaison</h2><h2 class="en">Comparison</h2>
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead><tr><th><span class="fr">Solution</span><span class="en">Solution</span></th><th><span class="fr">Coût initial</span><span class="en">Upfront</span></th><th><span class="fr">Coût d'usage</span><span class="en">Running cost</span></th><th><span class="fr">Germes</span><span class="en">Germs</span></th><th><span class="fr">Fabricable localement</span><span class="en">Made locally</span></th><th><span class="fr">Limites</span><span class="en">Limits</span></th></tr></thead>
+          <tbody>
+            <tr><td><span class="fr">Ébullition</span><span class="en">Boiling</span></td><td>≈ 0</td><td><span class="tag bad"><span class="fr">élevé</span><span class="en">high</span></span></td><td><span class="tag ok">++</span></td><td><span class="fr">oui</span><span class="en">yes</span></td><td><span class="fr">Combustible, déforestation, fumée, temps, recontamination</span><span class="en">Fuel, deforestation, smoke, time, recontamination</span></td></tr>
+            <tr><td><span class="fr">Comprimés de chlore</span><span class="en">Chlorine tablets</span></td><td>≈ 0</td><td><span class="tag warn"><span class="fr">régulier</span><span class="en">recurring</span></span></td><td><span class="tag ok">++</span></td><td><span class="fr">non (approvisionnement)</span><span class="en">no (supply chain)</span></td><td><span class="fr">Goût rejeté, peu efficace en eau trouble, sans effet sur Cryptosporidium</span><span class="en">Taste rejected, weak in turbid water, no effect on Cryptosporidium</span></td></tr>
+            <tr><td><span class="fr">Filtre céramique</span><span class="en">Ceramic pot filter</span></td><td>≈ 15–25 $</td><td><span class="tag ok"><span class="fr">faible</span><span class="en">low</span></span></td><td><span class="tag ok">+</span></td><td><span class="fr">atelier nécessaire</span><span class="en">needs a workshop</span></td><td><span class="fr">Fragile, casse au transport</span><span class="en">Fragile, breaks in transport</span></td></tr>
+            <tr><td><span class="fr">Filtre / paille importé</span><span class="en">Imported filter / straw</span></td><td>≈ 20–60 $+</td><td><span class="tag warn"><span class="fr">cartouches</span><span class="en">cartridges</span></span></td><td><span class="tag ok">++</span></td><td><span class="fr">non</span><span class="en">no</span></td><td><span class="fr">Importé, pièces introuvables, dépendance</span><span class="en">Imported, no spare parts, dependency</span></td></tr>
+            <tr><td><span class="fr">Biosable en béton</span><span class="en">Concrete biosand</span></td><td>≈ 30–75 $</td><td><span class="tag ok"><span class="fr">très faible</span><span class="en">very low</span></span></td><td><span class="tag ok">+</span></td><td><span class="fr">oui (moule acier)</span><span class="en">yes (steel mould)</span></td><td><span class="fr">Lourd, difficile à transporter</span><span class="en">Heavy, hard to transport</span></td></tr>
+            <tr class="highlight"><td>Mayi Peto</td><td>≈ 15 $</td><td><span class="tag ok">≈ 0,7 $/<span class="fr">mois</span><span class="en">mo</span></span></td><td><span class="tag ok">++ <span class="fr">(avec désinf.)</span><span class="en">(with disinf.)</span></span></td><td><span class="fr">oui, 100 %</span><span class="en">yes, 100%</span></td><td><span class="fr">Maturation, entretien régulier, tests nécessaires</span><span class="en">Maturation, regular care, testing needed</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted" style="margin-top:8px"><span class="fr">Ordres de grandeur indicatifs, variables selon le pays et le fournisseur.</span><span class="en">Indicative orders of magnitude; they vary by country and supplier.</span></p>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap">
+      <span class="eyebrow"><span class="fr">Géopolitique & interculturel</span><span class="en">Geopolitics & intercultural</span></span>
+      <h2 class="fr">Afrique subsaharienne vs Asie du Sud</h2><h2 class="en">Sub-Saharan Africa vs South Asia</h2>
+      <div class="two-col" style="margin-top:16px">
+        <div class="card">
+          <h3>🇨🇩 <span class="fr">RDC / Afrique subsaharienne</span><span class="en">DRC / Sub-Saharan Africa</span></h3>
+          <ul class="fr"><li>Danger principal : <b>microbiologique</b> et turbidité (rivières boueuses), épidémies de choléra récurrentes.</li><li>Matériaux : pagne wax, moringa (pousse bien en zone tropicale), <i>makala</i> présent partout.</li><li>Langues : français, lingala, swahili, kikongo, tshiluba, d'où des consignes en pictogrammes.</li><li>Insécurité et déplacements dans l'Est : il faut un filtre léger et démontable.</li><li>Fluor élevé dans certaines zones du Rift : option charbon d'os à étudier.</li></ul>
+          <ul class="en"><li>Main hazard: <b>microbial</b> and turbidity (muddy rivers), recurring cholera outbreaks.</li><li>Materials: wax-print cloth, moringa (grows well in the tropics), <i>makala</i> everywhere.</li><li>Languages: French, Lingala, Swahili, Kikongo, Tshiluba, hence picture-based instructions.</li><li>Insecurity and displacement in the East: the filter must be light and easy to dismantle.</li><li>High fluoride in parts of the Rift: a bone-char option to study.</li></ul>
+        </div>
+        <div class="card">
+          <h3>🇧🇩🇮🇳🇳🇵 <span class="fr">Asie du Sud</span><span class="en">South Asia</span></h3>
+          <ul class="fr"><li>Danger principal : <b>arsenic</b> dans les puits tubés (Bangladesh, Inde, Népal) → ajout d'une couche de <b>clous de fer</b>, comme dans le filtre Kanchan au Népal.</li><li>Le filtre en tissu de sari a réduit le choléra d'environ 48 % au Bangladesh (Colwell et al., 2003). Notre pagne reprend la même idée.</li><li>Moussons et inondations : la plateforme surélevée est indispensable.</li><li>Normes sociales (genre, caste) autour des points d'eau partagés : prévoir des unités par foyer.</li><li>Densité forte : les versions communautaires de 200 L sont plus pertinentes.</li></ul>
+          <ul class="en"><li>Main hazard: <b>arsenic</b> in tube wells (Bangladesh, India, Nepal) → add a layer of <b>iron nails</b>, as in the Kanchan filter in Nepal.</li><li>Sari-cloth filtration cut cholera by about 48% in Bangladesh (Colwell et al., 2003). Our wax-print cloth uses the same idea.</li><li>Monsoons and floods: the raised platform is essential.</li><li>Social norms (gender, caste) around shared water points: plan household units.</li><li>High density: 200 L community versions make more sense.</li></ul>
+        </div>
+      </div>
+      <h3 style="margin-top:28px" class="fr">Freins à l'adoption et nos réponses</h3><h3 style="margin-top:28px" class="en">Barriers to adoption and our responses</h3>
+      <div class="table-wrap" style="margin-top:10px">
+        <table>
+          <thead><tr><th><span class="fr">Frein</span><span class="en">Barrier</span></th><th><span class="fr">Réponse</span><span class="en">Response</span></th></tr></thead>
+          <tbody>
+            <tr><td><span class="fr">« L'eau claire est propre » (croyance)</span><span class="en">“Clear water is clean” (belief)</span></td><td><span class="fr">Démonstrations avec un kit E. coli, ateliers dans les écoles, onglet Sensibilisation</span><span class="en">Demonstrations with an E. coli kit, school workshops, Awareness tab</span></td></tr>
+            <tr><td><span class="fr">Goût du chlore rejeté</span><span class="en">Chlorine taste rejected</span></td><td><span class="fr">Le charbon atténue le goût. Le SODIS offre une alternative sans goût. Tests de dégustation avec les usagers</span><span class="en">Charcoal softens the taste. SODIS offers a taste-free alternative. Taste tests with users</span></td></tr>
+            <tr><td><span class="fr">Coût et trésorerie des ménages</span><span class="en">Household cost and cash flow</span></td><td><span class="fr">Paiement échelonné via la coopérative, matériaux de récupération</span><span class="en">Instalment payments through the cooperative, reused materials</span></td></tr>
+            <tr><td><span class="fr">Manque d'entretien</span><span class="en">Lack of maintenance</span></td><td><span class="fr">Techniciennes locales, autocollant d'entretien en pictogrammes</span><span class="en">Local technicians, picture-based maintenance sticker</span></td></tr>
+            <tr><td><span class="fr">Insécurité / accès (Est de la RDC)</span><span class="en">Insecurity / access (eastern DRC)</span></td><td><span class="fr">Pilote dans une zone stable, partenariat avec des ONG déjà présentes</span><span class="en">Pilot in a stable area, partnership with NGOs already on site</span></td></tr>
+            <tr><td><span class="fr">Rôles de genre</span><span class="en">Gender roles</span></td><td><span class="fr">Co-conception avec les femmes, qui portent l'eau et deviennent techniciennes</span><span class="en">Co-design with the women who carry the water and become technicians</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ======================================================= -->
+<!-- SIMULATEUR                                               -->
+<!-- ======================================================= -->
+<div class="page" id="p-simulateur">
+  <section class="page-head">
+    <div class="wrap">
+      <span class="eyebrow"><span class="fr">Modélisation</span><span class="en">Modelling</span></span>
+      <h2 class="fr">Simulateur : construisez votre filtre</h2><h2 class="en">Simulator: build your filter</h2>
+      <p class="lead fr">Choisissez l'eau de départ, le contenant et les couches de matériaux (de haut en bas). Le modèle estime ensuite la qualité de l'eau, le débit, le coût et les erreurs de conception. Comparez le filtre « bouteille » classique avec Mayi Peto.</p>
+      <p class="lead en">Pick the raw water, the container and the material layers (top to bottom). The model then estimates water quality, flow, cost and design mistakes. Compare the classic “bottle” filter with Mayi Peto.</p>
+    </div>
+  </section>
+  <section class="block" style="padding-top:20px">
+    <div class="wrap">
+      <div class="presets no-print" id="sim-presets" style="margin-bottom:14px"></div>
+      <div class="sim">
+        <div class="panel" id="sim-controls"></div>
+        <div class="panel viz">
+          <svg id="sim-svg" viewBox="0 0 360 560" role="img" aria-label="Visualisation du filtre simulé"></svg>
+          <div class="viz-cap"><span class="fr">● boue &nbsp; ● germes &nbsp; ● eau — animation indicative</span><span class="en">● mud &nbsp; ● germs &nbsp; ● water — indicative animation</span></div>
+        </div>
+        <div class="panel results" id="sim-results"></div>
+      </div>
+      <div class="callout info" style="margin-top:18px">
+        <p class="small fr" style="margin:0"><b>Comment fonctionne le modèle ?</b> C'est un modèle <b>pédagogique simplifié</b>. Les réductions de germes sont calibrées sur les plages de l'OMS (2022) : biosable 1–3 log pour les bactéries, 0,5–2 pour les virus, 2–4 pour les protozoaires. Le débit suit la loi de Darcy (perméabilité de chaque couche × charge d'eau). Le verdict utilise les cibles du programme OMS d'évaluation du traitement de l'eau à domicile : ★ = bactéries ≥ 2, virus ≥ 3, protozoaires ≥ 2 log ; ★★ = 4 / 5 / 4 log. Ce modèle <b>ne remplace pas une analyse en laboratoire</b>.</p>
+        <p class="small en" style="margin:0"><b>How does the model work?</b> It is a <b>simplified teaching model</b>. Germ reductions are calibrated on WHO (2022) ranges: biosand 1–3 log for bacteria, 0.5–2 for viruses, 2–4 for protozoa. Flow follows Darcy's law (permeability of each layer × water head). The verdict uses the targets of the WHO household water treatment evaluation scheme: ★ = bacteria ≥ 2, viruses ≥ 3, protozoa ≥ 2 log; ★★ = 4 / 5 / 4 log. This model <b>does not replace a laboratory test</b>.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ======================================================= -->
+<!-- SENSIBILISATION                                          -->
+<!-- ======================================================= -->
+<div class="page" id="p-sensibilisation">
+  <section class="page-head">
+    <div class="wrap">
+      <span class="eyebrow"><span class="fr">Sensibilisation</span><span class="en">Awareness</span></span>
+      <h2 class="fr">Une eau claire n'est pas toujours une eau propre</h2><h2 class="en">Clear water is not always clean water</h2>
+      <p class="lead fr">Un filtre ne sert à rien si personne ne l'utilise bien. Cette page sert aux animateurs, aux enseignants et aux familles. Les gestes sont présentés en pictogrammes pour être compris quelle que soit la langue.</p>
+      <p class="lead en">A filter is useless if nobody uses it properly. This page is for facilitators, teachers and families. The habits are shown as pictograms so that they are understood whatever the language.</p>
+    </div>
+  </section>
+
+  <section class="block" style="padding-top:20px">
+    <div class="wrap">
+      <h2 class="fr">Les maladies de l'eau sale</h2><h2 class="en">Diseases from dirty water</h2>
+      <div class="grid g3" style="margin-top:14px">
+        <div class="card disease"><h3 class="fr">Diarrhée</h3><h3 class="en">Diarrhoea</h3><p class="fr">C'est la première cause de maladie liée à l'eau, très dangereuse pour les enfants de moins de 5 ans (déshydratation). Bactéries, virus et parasites peuvent la provoquer.</p><p class="en">The leading water-related illness, very dangerous for children under 5 (dehydration). Bacteria, viruses and parasites can all cause it.</p></div>
+        <div class="card disease"><h3 class="fr">Choléra</h3><h3 class="en">Cholera</h3><p class="fr">Une bactérie (<i>Vibrio cholerae</i>) qui provoque des épidémies récurrentes en RDC. Elle peut tuer en quelques heures sans réhydratation.</p><p class="en">A bacterium (<i>Vibrio cholerae</i>) behind recurring outbreaks in the DRC. It can kill within hours without rehydration.</p></div>
+        <div class="card disease"><h3 class="fr">Typhoïde</h3><h3 class="en">Typhoid</h3><p class="fr">Fièvre longue causée par <i>Salmonella</i> Typhi, transmise par l'eau et les aliments souillés.</p><p class="en">A long fever caused by <i>Salmonella</i> Typhi, spread through dirty water and food.</p></div>
+        <div class="card disease"><h3 class="fr">Hépatite A et E</h3><h3 class="en">Hepatitis A and E</h3><p class="fr">Virus qui touchent le foie. Le sable seul les retient mal, d'où l'importance de la désinfection.</p><p class="en">Viruses that attack the liver. Sand alone barely stops them, which is why disinfection matters.</p></div>
+        <div class="card disease"><h3 class="fr">Parasites (Giardia, amibes)</h3><h3 class="en">Parasites (Giardia, amoebae)</h3><p class="fr">Le filtre biosable les retient bien (2 à 4 log selon l'OMS).</p><p class="en">The biosand filter removes them well (2–4 log according to WHO).</p></div>
+        <div class="card disease"><h3 class="fr">Bilharziose</h3><h3 class="en">Schistosomiasis</h3><p class="fr">Elle s'attrape par contact avec l'eau douce infestée (baignade, lessive). Il faut éviter de rester les pieds dans l'eau stagnante.</p><p class="en">Caught through contact with infested fresh water (bathing, laundry). Avoid standing in still water.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block alt">
+    <div class="wrap">
+      <h2 class="fr">Les 6 bons gestes</h2><h2 class="en">The 6 good habits</h2>
+      <div class="gestes" style="margin-top:16px">
+        <div class="card geste">
+          <svg viewBox="0 0 96 96" aria-hidden="true"><circle cx="48" cy="48" r="46" fill="var(--teal-soft)"/><path d="M20 70h56" stroke="#7a5a3a" stroke-width="4"/><path d="M30 70V44h36v26" fill="#cfc8b6" stroke="#8f8878" stroke-width="2"/><rect x="40" y="52" width="16" height="18" fill="#3b93bf"/><path d="M24 44h48" stroke="#94704b" stroke-width="5" stroke-linecap="round"/><path d="M16 70 v-14 M80 70 v-14 M16 58 h10 M70 58 h10" stroke="#c2502f" stroke-width="3"/></svg>
+          <h3 class="fr">1. Protéger la source</h3><h3 class="en">1. Protect the source</h3>
+          <p class="fr">Pas d'animaux ni de latrines à moins de 30 m. Clôturer et couvrir le puits.</p><p class="en">No animals or latrines within 30 m. Fence and cover the well.</p></div>
+        <div class="card geste">
+          <svg viewBox="0 0 96 96" aria-hidden="true"><circle cx="48" cy="48" r="46" fill="var(--teal-soft)"/><rect x="30" y="18" width="36" height="58" rx="5" fill="url(#g-drum)"/><rect x="34" y="30" width="28" height="8" fill="url(#g-water)"/><rect x="34" y="38" width="28" height="18" fill="url(#p-fine)"/><rect x="34" y="56" width="28" height="6" fill="url(#p-charcoal)"/><rect x="34" y="62" width="28" height="10" fill="url(#p-gravel)"/><circle class="drip" cx="72" cy="66" r="3" fill="#3b93bf"/></svg>
+          <h3 class="fr">2. Filtrer</h3><h3 class="en">2. Filter</h3>
+          <p class="fr">Faire décanter l'eau trouble, puis la passer dans le filtre Mayi Peto.</p><p class="en">Let muddy water settle, then pass it through the Mayi Peto filter.</p></div>
+        <div class="card geste">
+          <svg viewBox="0 0 96 96" aria-hidden="true"><circle cx="48" cy="48" r="46" fill="var(--teal-soft)"/><circle cx="66" cy="28" r="10" fill="#f2b83a"/><g stroke="#f2a33a" stroke-width="2.5" stroke-linecap="round"><line x1="66" y1="10" x2="66" y2="14"/><line x1="84" y1="28" x2="80" y2="28"/><line x1="79" y1="15" x2="76" y2="18"/></g><rect x="18" y="52" width="48" height="16" rx="7" fill="#bfe6f5" stroke="#5aa8c9" stroke-width="2"/><rect x="66" y="56" width="8" height="8" rx="2" fill="#2e86b5"/><path d="M16 74h64" stroke="#9aa4ab" stroke-width="4"/></svg>
+          <h3 class="fr">3. Désinfecter</h3><h3 class="en">3. Disinfect</h3>
+          <p class="fr">Mettre du chlore (30 min d'attente) ou exposer l'eau 6 h au soleil (SODIS). Faire bouillir reste possible.</p><p class="en">Add chlorine (30 min wait) or expose the water to 6 h of sun (SODIS). Boiling also works.</p></div>
+        <div class="card geste">
+          <svg viewBox="0 0 96 96" aria-hidden="true"><circle cx="48" cy="48" r="46" fill="var(--teal-soft)"/><path d="M26 30h44l-4 46H30z" fill="url(#g-bucket)" stroke="#8f8878" stroke-width="2"/><rect x="22" y="24" width="52" height="8" rx="3" fill="#cfc8b6" stroke="#8f8878"/><path d="M30 46h37l-3 30H32z" fill="url(#g-water)" opacity=".8"/><rect x="66" y="64" width="12" height="5" rx="2" fill="#2e86b5"/><circle class="drip" cx="76" cy="74" r="2.5" fill="#3b93bf"/></svg>
+          <h3 class="fr">4. Stocker fermé</h3><h3 class="en">4. Store it closed</h3>
+          <p class="fr">Seau avec couvercle et robinet. Ne jamais tremper la main ou un gobelet dedans.</p><p class="en">Bucket with a lid and a tap. Never dip a hand or a cup into it.</p></div>
+        <div class="card geste">
+          <svg viewBox="0 0 96 96" aria-hidden="true"><circle cx="48" cy="48" r="46" fill="var(--teal-soft)"/><path d="M26 18h30v8H46v6h-8v-6H26z" fill="#7d8b93"/><rect x="22" y="15" width="8" height="14" rx="2" fill="#5d6b73"/><g stroke="#3b93bf" stroke-width="2.5" stroke-linecap="round"><line x1="42" y1="36" x2="42" y2="44"/><line x1="38" y1="40" x2="37" y2="47"/><line x1="46" y1="40" x2="47" y2="47"/></g><ellipse cx="36" cy="62" rx="15" ry="8" transform="rotate(-25 36 62)" fill="#a5683f"/><ellipse cx="50" cy="62" rx="15" ry="8" transform="rotate(25 50 62)" fill="#8d5633"/><rect x="58" y="70" width="18" height="10" rx="4" fill="#f3e6cb" stroke="#c9bfa9"/><circle cx="66" cy="52" r="4.5" fill="none" stroke="#5aa8c9" stroke-width="2"/><circle cx="74" cy="44" r="3" fill="none" stroke="#5aa8c9" stroke-width="2"/><circle cx="24" cy="48" r="3.5" fill="none" stroke="#5aa8c9" stroke-width="2"/></svg>
+          <h3 class="fr">5. Se laver les mains</h3><h3 class="en">5. Wash your hands</h3>
+          <p class="fr">Avec du savon : après les toilettes, avant de cuisiner, avant de manger et avant de nourrir un enfant.</p><p class="en">With soap: after the toilet, before cooking, before eating and before feeding a child.</p></div>
+        <div class="card geste">
+          <svg viewBox="0 0 96 96" aria-hidden="true"><circle cx="48" cy="48" r="46" fill="var(--teal-soft)"/><path d="M24 34h36l-4 40H28z" fill="url(#g-bucket)" stroke="#8f8878" stroke-width="2"/><rect x="58" y="22" width="8" height="30" rx="3" transform="rotate(30 62 37)" fill="#c2502f"/><path d="M68 54 l6 -3 M70 60 l7 0" stroke="#c2502f" stroke-width="2.5"/><path d="M70 24 l2 -6 l2 6 l6 2 l-6 2 l-2 6 l-2 -6 l-6 -2z" fill="#f2b83a"/></svg>
+          <h3 class="fr">6. Nettoyer chaque semaine</h3><h3 class="en">6. Clean every week</h3>
+          <p class="fr">Laver les seaux, les bidons et le pagne au savon. Rincer à l'eau traitée.</p><p class="en">Wash buckets, jerrycans and the cloth with soap. Rinse with treated water.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap">
+      <h2 class="fr">Idées reçues</h2><h2 class="en">Myths and facts</h2>
+      <p class="muted fr">Touchez une carte pour la retourner.</p><p class="muted en">Tap a card to flip it.</p>
+      <div class="grid g3" style="margin-top:12px" id="myths"></div>
+    </div>
+  </section>
+
+  <section class="block alt">
+    <div class="wrap two-col">
+      <div class="card">
+        <span class="tag warn">SODIS</span>
+        <h3 style="margin-top:8px" class="fr">Désinfecter au soleil</h3><h3 style="margin-top:8px" class="en">Disinfect with sunlight</h3>
+        <ol class="fr"><li>Prendre des bouteilles PET transparentes, propres, de 2 L au plus.</li><li>Les remplir d'eau <b>déjà filtrée</b>. L'eau doit être assez claire pour lire un titre de journal à travers la bouteille.</li><li>Fermer et secouer 20 s pour oxygéner l'eau.</li><li>Les poser couchées sur une tôle, 6 h en plein soleil (2 jours si le ciel est couvert).</li><li>Boire directement à la bouteille ou verser dans un verre propre.</li></ol>
+        <ol class="en"><li>Take clean, clear PET bottles of 2 L at most.</li><li>Fill them with <b>already filtered</b> water. It must be clear enough to read a newspaper headline through the bottle.</li><li>Close and shake for 20 s to oxygenate the water.</li><li>Lay them on a metal roof for 6 h in full sun (2 days if the sky is cloudy).</li><li>Drink from the bottle or pour into a clean glass.</li></ol>
+      </div>
+      <div class="card">
+        <span class="tag ok">Moringa</span>
+        <h3 style="margin-top:8px" class="fr">Clarifier avec le moringa</h3><h3 style="margin-top:8px" class="en">Clarify with moringa</h3>
+        <ol class="fr"><li>Prendre des graines mûres et sèches de <i>Moringa oleifera</i> et retirer la coque.</li><li>Les écraser en poudre fine.</li><li>Mélanger la poudre avec un peu d'eau propre pour faire une pâte.</li><li>L'ajouter à l'eau trouble : environ 1 graine par litre, à ajuster par essai.</li><li>Remuer vite 1 min, lentement 5 min, puis laisser reposer 1 à 2 h. Utiliser l'eau du dessus.</li></ol>
+        <ol class="en"><li>Take ripe, dry <i>Moringa oleifera</i> seeds and remove the shells.</li><li>Crush them into a fine powder.</li><li>Mix the powder with a little clean water to make a paste.</li><li>Add it to the muddy water: about 1 seed per litre, adjusted by trial.</li><li>Stir fast for 1 min, slowly for 5 min, then let it rest 1–2 h. Use the top water.</li></ol>
+        <p class="small muted fr">Le moringa clarifie l'eau mais ne la rend pas potable : il faut toujours filtrer et désinfecter ensuite.</p><p class="small muted en">Moringa clarifies water but does not make it safe: always filter and disinfect afterwards.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap">
+      <h2 class="fr">Quiz : testez vos connaissances</h2><h2 class="en">Quiz: test your knowledge</h2>
+      <div class="quiz" id="quiz" style="margin-top:14px"></div>
+    </div>
+  </section>
+
+  <section class="block alt">
+    <div class="wrap">
+      <h2 class="fr">Conseils pour les animateurs</h2><h2 class="en">Tips for facilitators</h2>
+      <div class="grid g4" style="margin-top:14px">
+        <div class="card"><h3 class="fr">Parler la langue locale</h3><h3 class="en">Speak the local language</h3><p class="fr">Lingala, swahili, kikongo, tshiluba… Les pictogrammes de cette page s'impriment et s'affichent au point d'eau.</p><p class="en">Lingala, Swahili, Kikongo, Tshiluba… The pictograms on this page can be printed and posted at the water point.</p></div>
+        <div class="card"><h3 class="fr">Montrer plutôt qu'expliquer</h3><h3 class="en">Show, don't tell</h3><p class="fr">Comparez deux verres d'eau avant et après le filtre, et faites un test E. coli avec le centre de santé.</p><p class="en">Compare two glasses of water before and after the filter, and run an E. coli test with the health centre.</p></div>
+        <div class="card"><h3 class="fr">Inclure les femmes</h3><h3 class="en">Include women</h3><p class="fr">Ce sont elles qui puisent, transportent et traitent l'eau. Elles doivent participer à la conception et à l'entretien.</p><p class="en">They are the ones who draw, carry and treat the water. They must take part in design and maintenance.</p></div>
+        <div class="card"><h3 class="fr">Passer par l'école</h3><h3 class="en">Go through schools</h3><p class="fr">Les enfants rapportent les bons gestes à la maison. Une version 200 L à l'école sert aussi de démonstration.</p><p class="en">Children bring good habits home. A 200 L unit at school also serves as a demonstration.</p></div>
+      </div>
+      <div class="no-print" style="margin-top:16px"><button class="btn small ghost" type="button" onclick="window.print()"><span class="fr">🖨 Imprimer cette page (affiche)</span><span class="en">🖨 Print this page (poster)</span></button></div>
+    </div>
+  </section>
+</div>
+
+<!-- ======================================================= -->
+<!-- CARTE                                                    -->
+<!-- ======================================================= -->
+<div class="page" id="p-carte">
+  <section class="page-head">
+    <div class="wrap">
+      <span class="eyebrow"><span class="fr">Données ouvertes</span><span class="en">Open data</span></span>
+      <h2 class="fr">Carte des points d'eau en RDC</h2><h2 class="en">Water point map of the DRC</h2>
+      <p class="lead fr">Les points d'eau recensés dans OpenStreetMap : robinets et bornes-fontaines, points d'eau, puits, pompes manuelles, sources et ouvrages. Cette carte peut aider à choisir un site pilote : là où l'eau vient de puits ouverts ou de sources non protégées, un filtre Mayi Peto a le plus d'impact.</p>
+      <p class="lead en">Water points recorded in OpenStreetMap: taps and standpipes, water points, wells, hand pumps, springs and facilities. The map can help choose a pilot site: where water comes from open wells or unprotected springs, a Mayi Peto filter has the most impact.</p>
+    </div>
+  </section>
+  <section class="block" style="padding-top:20px">
+    <div class="wrap map-layout">
+      <div class="panel">
+        <h3 class="fr">Filtrer par type</h3><h3 class="en">Filter by type</h3>
+        <div id="map-filters"></div>
+        <div class="sec">
+          <label class="checks" style="display:flex;gap:8px;font-size:.88rem"><input type="checkbox" id="f-seasonal"> <span><span class="fr">Seulement les points <b>saisonniers</b> (à sec une partie de l'année)</span><span class="en">Only <b>seasonal</b> points (dry part of the year)</span></span></label>
+        </div>
+        <div class="sec">
+          <div class="kv"><span class="fr">Points affichés</span><span class="en">Points shown</span><b id="map-count">—</b></div>
+          <button class="btn small ghost" type="button" id="locate-btn" style="margin-top:6px"><span class="fr">📍 Autour de moi</span><span class="en">📍 Near me</span></button>
+        </div>
+        <div class="sec small muted">
+          <p class="fr"><b>À savoir :</b> OpenStreetMap est rempli par des bénévoles. Ses données sont <b>incomplètes</b>, surtout en zone rurale. L'absence de point ne veut pas dire qu'il n'y a pas d'eau, et l'état de fonctionnement ou la qualité de l'eau sont rarement indiqués.</p>
+          <p class="en"><b>Good to know:</b> OpenStreetMap is filled in by volunteers. Its data is <b>incomplete</b>, especially in rural areas. A missing point does not mean there is no water, and working status or water quality are rarely recorded.</p>
+          <p id="map-meta"></p>
+          <p class="fr">Vous connaissez un point d'eau absent ? <a href="https://www.openstreetmap.org/" target="_blank" rel="noopener">Ajoutez-le sur OpenStreetMap</a>.</p>
+          <p class="en">Know a missing water point? <a href="https://www.openstreetmap.org/" target="_blank" rel="noopener">Add it to OpenStreetMap</a>.</p>
+        </div>
+      </div>
+      <div>
+        <div id="map" role="region" aria-label="Carte"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ======================================================= -->
+<!-- PROJET                                                   -->
+<!-- ======================================================= -->
+<div class="page" id="p-projet">
+  <section class="page-head">
+    <div class="wrap">
+      <span class="eyebrow">Engineers Without Borders · IMT Atlantique</span>
+      <h2 class="fr">Le projet</h2><h2 class="en">The project</h2>
+      <p class="lead fr">Sujet : <i>Low-Cost Water Purification for Rural Communities in developing countries</i>. Pays choisi : la République démocratique du Congo. Le site pilote reste à choisir avec un partenaire local.</p>
+      <p class="lead en">Topic: <i>Low-Cost Water Purification for Rural Communities in developing countries</i>. Chosen country: the Democratic Republic of the Congo. The pilot site is still to be chosen with a local partner.</p>
+      <!-- TODO équipe : remplacer par les noms des membres du groupe -->
+      <p class="muted"><span class="fr">Équipe : <b>[noms des membres à compléter]</b> · FISE A2 · 2026-2027</span><span class="en">Team: <b>[member names to be added]</b> · FISE A2 · 2026-2027</span></p>
+    </div>
+  </section>
+
+  <section class="block" style="padding-top:20px">
+    <div class="wrap">
+      <h2>PESTLE</h2>
+      <p class="muted fr">En rouge : les trois facteurs prioritaires retenus par l'équipe.</p><p class="muted en">In red: the team's three priority factors.</p>
+      <div class="pestle" style="margin-top:12px">
+        <div class="p"><div class="L">P</div><b class="fr">Politique</b><b class="en">Political</b><p class="fr">Insécurité, déplacements et priorités locales changeantes peuvent couper l'accès au site.</p><p class="en">Insecurity, displacement and shifting local priorities could cut off site access.</p></div>
+        <div class="p"><div class="L">E</div><b class="fr">Économique</b><b class="en">Economic</b><p class="fr">Les ménages peuvent-ils payer le filtre, le transport et le chlore ? Il faut relever les prix locaux.</p><p class="en">Can households pay for the filter, transport and chlorine? Local prices must be surveyed.</p></div>
+        <div class="p top"><div class="L">S</div><b class="fr">Social</b><b class="en">Social</b><p class="fr">Confiance, goût, langue, rôles dans le foyer : co-concevoir avec les femmes et les agents de santé.</p><p class="en">Trust, taste, language, household roles: co-design with women and health workers.</p></div>
+        <div class="p top"><div class="L">T</div><b class="fr">Technologique</b><b class="en">Technological</b><p class="fr">≈ 1 % d'électricité en zone rurale : gravité, réparation locale, désinfection et tests.</p><p class="en">≈ 1% rural electricity: gravity, local repair, disinfection and testing.</p></div>
+        <div class="p"><div class="L">L</div><b class="fr">Légal</b><b class="en">Legal</b><p class="fr">Normes de potabilité en RDC et autorisations : consulter les autorités provinciales.</p><p class="en">DRC drinking-water standards and permits: consult the provincial authorities.</p></div>
+        <div class="p top"><div class="L">E</div><b class="fr">Environnement</b><b class="en">Environmental</b><p class="fr">Crues et sécheresses : filtre surélevé et couvert, tests en saison sèche et en saison des pluies.</p><p class="en">Floods and droughts: raised, covered unit, tests in both dry and rainy seasons.</p></div>
+      </div>
+
+      <div class="card" style="margin-top:22px">
+        <h3 class="fr">« Est-ce que ça marchera dans un village rural de RDC ? »</h3><h3 class="en">“Will it work in a rural DRC community?”</h3>
+        <ul class="fr"><li><b>Social</b> : selon l'UNICEF, 33 millions de ruraux n'ont pas accès à une eau de qualité. Nous co-concevons avec les usagers, avec des consignes en langue locale.</li><li><b>Technologique</b> : l'accès rural à l'électricité est d'environ 1 % (2015-2023). Le filtre fonctionne donc par gravité, et nous comparons le lit de sable gradué au biosable standard, avec désinfection et tests (Banque mondiale 2026, OMS 2022).</li><li><b>Environnemental</b> : les crues et les sécheresses vont s'intensifier. Le filtre est surélevé et protégé, l'eau trouble est pré-décantée et nous testerons à chaque saison (Banque mondiale 2023).</li></ul>
+        <ul class="en"><li><b>Social</b>: according to UNICEF, 33 million rural residents lack quality water. We co-design with users, with instructions in the local language.</li><li><b>Technological</b>: rural electricity access is about 1% (2015-2023). The filter therefore runs on gravity, and we compare the graded sand bed with standard biosand, with disinfection and testing (World Bank 2026, WHO 2022).</li><li><b>Environmental</b>: floods and droughts will intensify. The unit is raised and protected, muddy water is pre-settled and we will test in every season (World Bank 2023).</li></ul>
+        <div class="callout info" style="margin-top:10px">
+          <p class="small fr" style="margin:0"><b>Question difficile :</b> « Pouvez-vous garantir que l'eau est potable après les couches de sable ? » <b>Réponse :</b> Non, pas avec la filtration seule. L'OMS montre que le biosable a des performances variables, surtout contre les virus. C'est pourquoi nous ajoutons une désinfection validée, et l'eau ne sera dite potable qu'après des analyses microbiologiques et chimiques.</p>
+          <p class="small en" style="margin:0"><b>Tough question:</b> “Can you guarantee the water is safe after the sand layers?” <b>Answer:</b> No, not from filtration alone. WHO evidence shows biosand performance varies, especially against viruses. That is why we add a validated disinfection step, and the water will only be called safe after microbiological and chemical tests.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block alt">
+    <div class="wrap">
+      <span class="eyebrow"><span class="fr">Prochaines étapes</span><span class="en">Next steps</span></span>
+      <h2 class="fr">Plan de mise en œuvre</h2><h2 class="en">Implementation plan</h2>
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead><tr><th><span class="fr">Période</span><span class="en">Period</span></th><th><span class="fr">Action</span><span class="en">Action</span></th></tr></thead>
+          <tbody>
+            <tr><td><span class="fr">Mois 0–1</span><span class="en">Month 0–1</span></td><td><span class="fr">Choisir le site pilote avec une ONG locale. Analyser l'eau de la source (turbidité, E. coli, polluants).</span><span class="en">Choose the pilot site with a local NGO. Test the source water (turbidity, E. coli, pollutants).</span></td></tr>
+            <tr><td><span class="fr">Mois 1–2</span><span class="en">Month 1–2</span></td><td><span class="fr">Ateliers de co-conception avec les femmes, les chefs locaux et les agents de santé. Relevé des prix locaux.</span><span class="en">Co-design workshops with women, local leaders and health workers. Local price survey.</span></td></tr>
+            <tr><td><span class="fr">Mois 2–3</span><span class="en">Month 2–3</span></td><td><span class="fr">Prototypes au FabLab d'IMT Atlantique, puis 10 unités fabriquées sur place par des artisans.</span><span class="en">Prototypes at the IMT Atlantique FabLab, then 10 units built on site by local craftspeople.</span></td></tr>
+            <tr><td><span class="fr">Mois 3–9</span><span class="en">Month 3–9</span></td><td><span class="fr">Pilote dans 30 foyers. Comparaison entre le lit gradué et le biosable standard. Tests en saison sèche et en saison des pluies.</span><span class="en">Pilot in 30 households. Graded bed vs standard biosand. Tests in dry and rainy seasons.</span></td></tr>
+            <tr><td><span class="fr">Mois 9–12</span><span class="en">Month 9–12</span></td><td><span class="fr">Formation de la coopérative de techniciennes. Recherche de financement pour passer à l'échelle.</span><span class="en">Training of the technicians' cooperative. Funding search to scale up.</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3 style="margin-top:24px" class="fr">Partenaires possibles</h3><h3 style="margin-top:24px" class="en">Possible partners</h3>
+      <div class="grid g4" style="margin-top:10px">
+        <div class="card"><b>UNICEF RDC</b><p class="small muted fr">Programme eau, hygiène et assainissement</p><p class="small muted en">Water, sanitation and hygiene programme</p></div>
+        <div class="card"><b>CAWST</b><p class="small muted fr">Référence technique du filtre biosable, formations</p><p class="small muted en">Technical reference for biosand filters, training</p></div>
+        <div class="card"><b>REGIDESO · <span class="fr">Ministère de la Santé</span><span class="en">Ministry of Health</span></b><p class="small muted fr">Normes, laboratoires, autorisations</p><p class="small muted en">Standards, labs, permits</p></div>
+        <div class="card"><b><span class="fr">Croix-Rouge RDC · ONG locales</span><span class="en">DRC Red Cross · local NGOs</span></b><p class="small muted fr">Accès au terrain, relais communautaires</p><p class="small muted en">Field access, community relays</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap">
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li>UNICEF RDC, « Eau, hygiène et assainissement », sans date (consulté le 5 nov. 2026). <a href="https://www.unicef.org/drcongo/" target="_blank" rel="noopener">unicef.org/drcongo</a></li>
+        <li>World Bank, “Access to Electricity: Who Remains Without Power?”, Atlas of Sustainable Development Goals, May 2026.</li>
+        <li>World Health Organization, <i>Guidelines for Drinking-water Quality</i>, 4th ed. incorporating the 1st and 2nd addenda, 2022, Table 7.8. <a href="https://www.who.int/publications/i/item/9789240045064" target="_blank" rel="noopener">who.int</a></li>
+        <li>World Bank Group, <i>Democratic Republic of Congo Country Climate and Development Report</i>, November 2023.</li>
+        <li>WHO/UNICEF Joint Monitoring Programme (JMP), <i>Progress on household drinking water, sanitation and hygiene 2000–2022</i>, 2023. <a href="https://washdata.org" target="_blank" rel="noopener">washdata.org</a></li>
+        <li>WHO, fact sheet “Drinking-water”. <a href="https://www.who.int/news-room/fact-sheets/detail/drinking-water" target="_blank" rel="noopener">who.int</a></li>
+        <li>WHO, International Scheme to Evaluate Household Water Treatment Technologies (performance targets ★ / ★★).</li>
+        <li>CAWST, <i>Biosand Filter Construction Manual</i>. <a href="https://www.cawst.org" target="_blank" rel="noopener">cawst.org</a></li>
+        <li>Colwell R. R. et al., “Reduction of cholera in Bangladesh villages by simple filtration”, <i>PNAS</i> 100(3), 2003.</li>
+        <li>Eawag / SODIS, Solar Water Disinfection. <a href="https://www.sodis.ch" target="_blank" rel="noopener">sodis.ch</a></li>
+        <li><span class="fr">Données de la carte</span><span class="en">Map data</span> : © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a> (ODbL), via Overpass API.</li>
+      </ol>
+      <p class="small muted fr">Les sources 1 à 4 viennent de l'analyse PESTLE de l'équipe. Les chiffres de coût et les paramètres du simulateur sont des estimations à valider sur le terrain.</p>
+      <p class="small muted en">Sources 1–4 come from the team's PESTLE analysis. Cost figures and simulator parameters are estimates to be validated in the field.</p>
+    </div>
+  </section>
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span><b>Mayi Peto</b> · <span class="fr">Projet étudiant</span><span class="en">Student project</span> — IMT Atlantique FISE A2 · Engineers Without Borders</span>
+    <span><span class="fr">Carte</span><span class="en">Map</span> © OpenStreetMap contributors · <span class="fr">Simulateur pédagogique : ne remplace pas une analyse d'eau</span><span class="en">Teaching simulator: not a substitute for water testing</span></span>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="js/main.js"></script>
+<script src="js/simulator.js"></script>
+<script src="js/map.js"></script>
+</body>
+</html>
