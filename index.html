@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,600..900&family=Instrument+Serif:ital@0;1&family=Space+Mono:wght@400;700&family=DM+Sans:opsz,wght@9..40,400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
@@ -16,16 +16,17 @@
 <script>
   // Langue et thème avant affichage (évite le clignotement)
   (function () {
-    var l = null, t = null;
-    try { l = localStorage.getItem('mp-lang'); t = localStorage.getItem('mp-theme'); } catch (e) {}
+    var l = null;
+    try { l = localStorage.getItem('mp-lang'); } catch (e) {}
     if (!l) l = (navigator.language || 'fr').slice(0, 2) === 'fr' ? 'fr' : 'en';
     document.documentElement.setAttribute('data-lang', l);
     document.documentElement.lang = l;
-    if (t) document.documentElement.setAttribute('data-theme', t);
   })();
 </script>
 </head>
 <body>
+<div class="progress" id="progress"></div>
+<div class="curtain" id="curtain" aria-hidden="true"><span id="curtain-txt"></span></div>
 
 <!-- ============ Motifs SVG partagés (textures des matériaux) ============ -->
 <svg class="hidden-defs" aria-hidden="true" focusable="false">
@@ -173,7 +174,7 @@
   <div class="wrap">
     <a class="brand" href="#accueil" aria-label="Mayi Peto">
       <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 4C22 18 12 28 12 40a20 20 0 0 0 40 0C52 28 42 18 32 4z" fill="#0e6a8f"/><path d="M20 40h24" stroke="#f3e6cb" stroke-width="4" stroke-linecap="round"/><path d="M22 47h20" stroke="#d9b77e" stroke-width="4" stroke-linecap="round"/><path d="M25 54h14" stroke="#2b2b2b" stroke-width="4" stroke-linecap="round"/><circle cx="26" cy="30" r="4" fill="#7cc6e3"/></svg>
-      Mayi Peto
+      Mayi Peto <small>.rdc</small>
     </a>
     <nav class="nav" aria-label="Navigation">
       <a href="#accueil" data-page="accueil"><span class="fr">Accueil</span><span class="en">Home</span></a>
@@ -185,7 +186,6 @@
     </nav>
     <div class="tools">
       <button class="chip-btn" id="lang-btn" type="button" aria-label="Changer de langue / Change language"><span class="fr">EN</span><span class="en">FR</span></button>
-      <button class="chip-btn" id="theme-btn" type="button" aria-label="Thème clair/sombre">◐</button>
     </div>
   </div>
 </header>
@@ -196,86 +196,99 @@
 <!-- ======================================================= -->
 <div class="page" id="p-accueil">
   <section class="hero">
-    <div class="wrap hero-grid">
-      <div>
-        <span class="eyebrow">Engineers Without Borders · IMT Atlantique · FISE A2 2026-2027</span>
-        <h1 class="fr">De l'eau trouble à l'eau <span class="accent">peto</span>.</h1>
-        <h1 class="en">From muddy water to <span class="accent">peto</span> water.</h1>
-        <p class="lead fr"><b>Mayi Peto</b> (« eau propre » en lingala) est un purificateur d'eau qui fonctionne par simple gravité. Il se fabrique avec ce que l'on trouve au marché ou au village : seaux, sable, gravier, charbon de bois, pagne et graines de moringa. Il est conçu pour les communautés rurales de la République démocratique du Congo, coûte environ <b>15 $</b> et n'a besoin d'aucune électricité.</p>
-        <p class="lead en"><b>Mayi Peto</b> (“clean water” in Lingala) is a water purifier that runs on gravity alone. It is built from things found at the market or in the village: buckets, sand, gravel, charcoal, wax-print cloth and moringa seeds. It is designed for rural communities in the Democratic Republic of the Congo, costs about <b>$15</b> and needs no electricity at all.</p>
-        <div class="cta">
-          <a class="btn" href="#filtre"><span class="fr">Découvrir le filtre</span><span class="en">Discover the filter</span> →</a>
-          <a class="btn ghost" href="#simulateur"><span class="fr">Construire mon filtre</span><span class="en">Build my own filter</span></a>
-          <a class="btn ghost" href="#carte"><span class="fr">Carte des points d'eau</span><span class="en">Water point map</span></a>
-        </div>
+    <div class="hero-bg" data-parallax="0.25" aria-hidden="true">H₂O</div>
+    <div class="wrap">
+      <span class="eyebrow lm"><span>Engineers Without Borders · IMT Atlantique · <span class="fr">RD Congo</span><span class="en">DR Congo</span> · 2026</span></span>
+      <h1 class="fr"><span class="lm"><span style="--d:.1s">De l'eau</span></span><span class="lm"><span style="--d:.2s">trouble à</span></span><span class="lm"><span style="--d:.3s">l'eau <em>peto.</em></span></span></h1>
+      <h1 class="en"><span class="lm"><span style="--d:.1s">From muddy</span></span><span class="lm"><span style="--d:.2s">water to</span></span><span class="lm"><span style="--d:.3s"><em>peto</em> water.</span></span></h1>
+      <p class="lead reveal" style="--d:.5s"><span class="fr"><b>Mayi Peto</b> (« eau propre » en lingala) est un purificateur à gravité fait de seaux, de sable, de charbon, de pagne et de graines de moringa. Il est conçu pour les villages de RDC, coûte environ 15 $ et n'utilise aucune électricité.</span><span class="en"><b>Mayi Peto</b> (“clean water” in Lingala) is a gravity purifier made of buckets, sand, charcoal, wax-print cloth and moringa seeds. It is designed for villages in the DRC, costs about $15 and uses no electricity.</span></p>
+      <div class="btn-row reveal" style="--d:.65s">
+        <a class="btn" href="#filtre"><span class="fr">Découvrir le filtre</span><span class="en">Discover the filter</span> <span class="arr">→</span></a>
+        <a class="btn ghost" href="#simulateur"><span class="fr">Construire mon filtre</span><span class="en">Build my filter</span></a>
       </div>
-      <div class="hero-art">
-        <svg viewBox="0 0 760 600" role="img" aria-label="Système Mayi Peto : seau de décantation, fût filtrant et seau de stockage"><use href="#mp-system"/></svg>
-      </div>
+      <div class="scroll-cue reveal" style="--d:.9s"><i></i><span class="fr">Défiler</span><span class="en">Scroll</span></div>
     </div>
   </section>
 
-  <section class="block" style="padding-top:8px">
+  <div class="marquee" aria-hidden="true"><div class="track">
+    <div class="item"><span>0 <em class="fr">électricité</em><em class="en">electricity</em></span><span class="star">✦</span><span>≈ 15 $</span><span class="star">✦</span><span>30–40 L <em class="fr">par jour</em><em class="en">a day</em></span><span class="star">✦</span><span>100 % <em>local</em></span><span class="star">✦</span><span>★ <em class="fr">cibles</em><em class="en">WHO</em> <span class="fr">OMS</span><span class="en">targets</span></span><span class="star">✦</span><span class="fr">Sable · Charbon · Moringa</span><span class="en">Sand · Charcoal · Moringa</span><span class="star">✦</span></div>
+  </div></div>
+
+  <section class="block" id="histoire" style="border-top:0">
     <div class="wrap">
+      <span class="eyebrow reveal"><span class="num">(01)</span> · <span class="fr">Une histoire que l'on entend souvent</span><span class="en">A story we hear too often</span></span>
+      <div class="story-row reveal"><span class="day"><span class="fr">Jour 1</span><span class="en">Day 1</span></span><p class="fr">Maman Bijou puise l'eau de la rivière. <em>Elle est claire, ça va.</em></p><p class="en">Mama Bijou draws water from the river. <em>It looks clear, it's fine.</em></p></div>
+      <div class="story-row reveal"><span class="day"><span class="fr">Jour 3</span><span class="en">Day 3</span></span><p class="fr">Son fils de 3 ans a la diarrhée. <em>Le dispensaire est à 12 km.</em></p><p class="en">Her 3-year-old son has diarrhoea. <em>The clinic is 12 km away.</em></p></div>
+      <div class="story-row reveal"><span class="day"><span class="fr">Jour 7</span><span class="en">Day 7</span></span><p class="fr">Elle fait bouillir l'eau. <em>Le makala coûte cher, la fumée pique les yeux.</em></p><p class="en">She boils the water. <em>Charcoal is expensive, the smoke stings.</em></p></div>
+      <div class="story-row reveal final"><span class="day"><span class="fr">Jour 30</span><span class="en">Day 30</span></span><p class="fr">Le village construit un Mayi Peto. <em>15 $, zéro électricité, de l'eau traitée chaque jour.</em></p><p class="en">The village builds a Mayi Peto. <em>$15, zero electricity, treated water every day.</em></p></div>
+      <p class="small muted reveal" style="margin-top:20px"><span class="fr">Scénario illustratif, inspiré de situations courantes en zone rurale.</span><span class="en">Illustrative scenario, based on common rural situations.</span></p>
+    </div>
+  </section>
+
+  <section class="block" id="constat">
+    <div class="wrap">
+      <span class="eyebrow reveal"><span class="num">(02)</span> · <span class="fr">Le constat</span><span class="en">The problem</span></span>
+      <p class="scrub fr">Une eau <em>claire</em> n'est pas une eau <em>propre.</em> En RDC, 33 millions de ruraux n'ont pas accès à une eau de qualité, et à peine 1 % ont l'électricité. La solution doit donc être simple, locale et fonctionner par <em>gravité.</em></p>
+      <p class="scrub en"><em>Clear</em> water is not <em>clean</em> water. In the DRC, 33 million rural people lack quality water, and barely 1% have electricity. So the solution must be simple, local and run on <em>gravity.</em></p>
+    </div>
+  </section>
+
+  <section class="block" id="chiffres">
+    <div class="wrap">
+      <span class="eyebrow reveal"><span class="num">(03)</span> · <span class="fr">Les chiffres</span><span class="en">The numbers</span></span>
       <div class="stats">
-        <div class="stat"><div class="num"><span class="fr">2,2 milliards</span><span class="en">2.2 billion</span></div><div class="lbl fr">de personnes sans eau potable gérée en toute sécurité dans le monde (2022)</div><div class="lbl en">people lack safely managed drinking water worldwide (2022)</div><div class="src">WHO/UNICEF JMP, 2023</div></div>
-        <div class="stat"><div class="num">33 <span class="fr">millions</span><span class="en">million</span></div><div class="lbl fr">d'habitants ruraux de RDC sans accès à une eau de qualité</div><div class="lbl en">rural residents of the DRC without access to quality water</div><div class="src">UNICEF RDC</div></div>
-        <div class="stat"><div class="num"><span class="fr">≈ 1 %</span><span class="en">≈ 1%</span></div><div class="lbl fr">d'accès à l'électricité en zone rurale en RDC (2015-2023) → la gravité s'impose</div><div class="lbl en">rural electricity access in the DRC (2015-2023) → gravity is the way</div><div class="src">World Bank, 2026</div></div>
-        <div class="stat"><div class="num"><span class="fr">505 000</span><span class="en">505,000</span></div><div class="lbl fr">décès par diarrhée chaque année liés à une eau de boisson contaminée</div><div class="lbl en">diarrhoeal deaths each year caused by contaminated drinking water</div><div class="src">WHO, fact sheet “Drinking-water”</div></div>
+        <div class="stat reveal"><div class="num"><span class="count" data-to="2.2" data-dec="1">0</span> <span class="u"><span class="fr">milliards</span><span class="en">billion</span></span></div><div class="lbl"><span class="fr">de personnes sans eau potable gérée en toute sécurité dans le monde (2022)</span><span class="en">people lack safely managed drinking water worldwide (2022)</span></div><div class="src">WHO/UNICEF JMP, 2023</div></div>
+        <div class="stat reveal" style="--d:.1s"><div class="num"><span class="count" data-to="33">0</span> <span class="u"><span class="fr">millions</span><span class="en">million</span></span></div><div class="lbl"><span class="fr">de ruraux en RDC sans accès à une eau de qualité</span><span class="en">rural people in the DRC without access to quality water</span></div><div class="src">UNICEF RDC</div></div>
+        <div class="stat reveal" style="--d:.2s"><div class="num">≈ <span class="count" data-to="1">0</span><span class="u"> %</span></div><div class="lbl"><span class="fr">d'accès à l'électricité en zone rurale (2015-2023) : la gravité s'impose</span><span class="en">rural electricity access (2015-2023): gravity is the way</span></div><div class="src">World Bank, 2026</div></div>
+        <div class="stat reveal" style="--d:.3s"><div class="num"><span class="count" data-to="505000">0</span></div><div class="lbl"><span class="fr">décès par diarrhée par an liés à une eau de boisson contaminée</span><span class="en">diarrhoeal deaths a year caused by contaminated drinking water</span></div><div class="src">WHO, “Drinking-water”</div></div>
       </div>
     </div>
   </section>
 
-  <section class="block alt">
-    <div class="wrap">
-      <span class="eyebrow"><span class="fr">Étape 1 · Comprendre le problème</span><span class="en">Step 1 · Understand the problem</span></span>
-      <h2 class="fr">Pourquoi un filtre de plus ?</h2><h2 class="en">Why another filter?</h2>
-      <div class="grid g3" style="margin-top:20px">
-        <div class="card"><h3 class="fr">Qui est touché ?</h3><h3 class="en">Who is affected?</h3>
-          <p class="fr">Les foyers ruraux qui boivent l'eau des rivières, des puits ouverts ou des sources non protégées. Surtout les femmes et les filles, qui vont chercher l'eau, les enfants de moins de 5 ans, les plus exposés à la diarrhée, et les familles déplacées dans l'Est.</p>
-          <p class="en">Rural households drinking from rivers, open wells or unprotected springs. Above all the women and girls who fetch the water, children under 5, who are most exposed to diarrhoea, and displaced families in the East.</p></div>
-        <div class="card"><h3 class="fr">Pourquoi est-ce un problème ?</h3><h3 class="en">Why is it a problem?</h3>
-          <p class="fr">Une eau contaminée par des matières fécales transmet la diarrhée, le choléra et la typhoïde. Les malades perdent des journées de travail, les enfants manquent l'école et les familles dépensent pour des soins.</p>
-          <p class="en">Water contaminated by faeces spreads diarrhoea, cholera and typhoid. People lose working days, children miss school and families pay for healthcare.</p></div>
-        <div class="card"><h3 class="fr">Ce qui existe déjà</h3><h3 class="en">What already exists</h3>
-          <p class="fr">L'ébullition, les comprimés de chlore, les filtres en céramique, les pailles et filtres importés, et les forages construits par les ONG.</p>
-          <p class="en">Boiling, chlorine tablets, ceramic pot filters, imported straws and filters, and boreholes built by NGOs.</p></div>
-        <div class="card"><h3 class="fr">Pourquoi ça ne suffit pas</h3><h3 class="en">Why it is not enough</h3>
-          <p class="fr">Faire bouillir l'eau coûte du bois ou du charbon et accélère la déforestation. Le chlore dépend d'un approvisionnement régulier et son goût est souvent rejeté. Les filtres importés sont chers et leurs pièces introuvables. Enfin, beaucoup de forages tombent en panne faute d'entretien.</p>
-          <p class="en">Boiling costs wood or charcoal and speeds up deforestation. Chlorine depends on a steady supply and its taste is often rejected. Imported filters are expensive and their spare parts are hard to find. And many boreholes break down for lack of maintenance.</p></div>
-        <div class="card"><h3 class="fr">Ce dont les usagers ont besoin</h3><h3 class="en">What users really need</h3>
-          <p class="fr">Un système bon marché, réparable sur place et sans électricité, avec une eau au goût accepté et des consignes en pictogrammes. Il doit aussi fournir assez d'eau : environ 7,5 L par personne et par jour pour boire et cuisiner.</p>
-          <p class="en">A cheap system that can be repaired locally and needs no electricity, with water that tastes acceptable and picture-based instructions. It must also supply enough water: about 7.5 L per person per day for drinking and cooking.</p></div>
-        <div class="card" style="background:var(--teal-soft)"><h3 class="fr">Notre réponse</h3><h3 class="en">Our answer</h3>
-          <p class="fr">Mayi Peto combine <b>plusieurs barrières</b> : décantation au moringa, filtre biosable « intelligent » et désinfection au soleil ou au chlore. Le tout est construit et entretenu par une coopérative locale.</p>
-          <p class="en">Mayi Peto combines <b>several barriers</b>: moringa settling, a “smart” biosand filter and disinfection by sunlight or chlorine. The units are built and maintained by a local cooperative.</p>
-          <a class="btn small" href="#filtre"><span class="fr">Voir le design</span><span class="en">See the design</span> →</a></div>
+  <section class="block" id="systeme">
+    <div class="wrap design-grid">
+      <div class="diagram reveal">
+        <svg viewBox="0 0 760 600" role="img" aria-label="Système Mayi Peto"><use href="#mp-system"/></svg>
+      </div>
+      <div>
+        <span class="eyebrow reveal"><span class="num">(04)</span> · <span class="fr">Le système</span><span class="en">The system</span></span>
+        <h2 class="reveal fr">Trois seaux. <em>Zéro</em> prise.</h2>
+        <h2 class="reveal en">Three buckets. <em>Zero</em> plugs.</h2>
+        <p class="lead reveal"><span class="fr">C'est le filtre bouteille de l'école (gravier, sable, charbon, coton), repensé pour une vraie famille. Il ajoute une décantation au moringa, un filtre biosable dont le sable ne sèche jamais et une désinfection finale.</span><span class="en">It is the classroom bottle filter (gravel, sand, charcoal, cotton), redesigned for a real family. It adds moringa settling, a biosand filter whose sand never dries out, and a final disinfection step.</span></p>
+        <a class="btn ghost reveal" href="#filtre"><span class="fr">Voir le schéma détaillé</span><span class="en">See the detailed diagram</span> <span class="arr">→</span></a>
       </div>
     </div>
   </section>
 
-  <section class="block">
+  <section class="block accent-band" id="methode">
     <div class="wrap">
-      <span class="eyebrow"><span class="fr">Innovation</span><span class="en">Innovation</span></span>
-      <h2 class="fr">Ce qui rend Mayi Peto différent</h2><h2 class="en">What makes Mayi Peto different</h2>
-      <div class="grid g4" style="margin-top:20px">
-        <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 21h18M5 21V10l7-6 7 6v11"/><path d="M9 21v-6h6v6"/></svg></div>
-          <h3 class="fr">100 % matériaux locaux</h3><h3 class="en">100% local materials</h3>
-          <p class="fr">Fût alimentaire recyclé, sable de rivière tamisé, <i>makala</i> (charbon), pagne, moringa. Rien à importer.</p>
-          <p class="en">Recycled food-grade drum, sieved river sand, <i>makala</i> (charcoal), wax-print cloth, moringa. Nothing to import.</p></div>
-        <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V8h6v12M10 14h10v6"/><path d="M7 8V4"/></svg></div>
-          <h3 class="fr">Sortie surélevée</h3><h3 class="en">Raised outlet</h3>
-          <p class="fr">Le tuyau remonte 5 cm au-dessus du sable : le lit reste toujours immergé et le <b>biofilm</b> qui mange les germes ne meurt pas.</p>
-          <p class="en">The outlet pipe rises 5 cm above the sand, so the bed always stays submerged and the germ-eating <b>biofilm</b> survives.</p></div>
-        <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div>
-          <h3 class="fr">Multi-barrières</h3><h3 class="en">Multi-barrier</h3>
-          <p class="fr">Coagulation, puis filtration, puis désinfection : le système vise les cibles de performance de l'OMS pour le traitement de l'eau à domicile.</p>
-          <p class="en">Coagulation, then filtration, then disinfection: the system aims at the WHO performance targets for household water treatment.</p></div>
-        <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M3 20c0-3 2.5-5 5-5s5 2 5 5M11 20c0-3 2.5-5 5-5s5 2 5 5"/></svg></div>
-          <h3 class="fr">Modèle coopératif</h3><h3 class="en">Cooperative model</h3>
-          <p class="fr">Des « techniciennes Mayi Peto », formées dans une coopérative de femmes, fabriquent, vendent et entretiennent les filtres. Cela crée des emplois locaux.</p>
-          <p class="en">“Mayi Peto technicians”, trained in a women's cooperative, build, sell and maintain the filters. This creates local jobs.</p></div>
+      <span class="eyebrow" style="color:var(--accent-ink)">(05) · <span class="fr">La méthode</span><span class="en">The method</span></span>
+      <div class="method-row reveal"><span class="n">01</span><h3 class="fr">Décanter <em>et clarifier</em></h3><h3 class="en">Settle <em>and clarify</em></h3><p class="fr">Dans un seau de 20 L, des graines de moringa broyées font tomber la boue en 1 à 2 h. On verse ensuite l'eau à travers un pagne plié en 4.</p><p class="en">In a 20 L bucket, crushed moringa seeds make the mud sink in 1–2 h. The water is then poured through a cloth folded 4 times.</p></div>
+      <div class="method-row reveal"><span class="n">02</span><h3 class="fr">Filtrer <em>par le sable</em></h3><h3 class="en">Filter <em>through sand</em></h3><p class="fr">Le fût de 60 L contient 30 cm de sable fin, du charbon et du gravier. La sortie surélevée garde le sable toujours mouillé, et le biofilm qui s'y forme mange les germes.</p><p class="en">The 60 L drum holds 30 cm of fine sand, charcoal and gravel. The raised outlet keeps the sand always wet, and the biofilm that grows there eats germs.</p></div>
+      <div class="method-row reveal"><span class="n">03</span><h3 class="fr">Désinfecter <em>et stocker</em></h3><h3 class="en">Disinfect <em>and store</em></h3><p class="fr">On ajoute du chlore (30 min d'attente) ou on expose l'eau 6 h au soleil (SODIS). L'eau est stockée dans un seau fermé avec robinet, dans lequel on ne trempe jamais de gobelet.</p><p class="en">Chlorine is added (30 min wait), or the water gets 6 h of sun (SODIS). It is stored in a closed bucket with a tap, and nobody dips a cup into it.</p></div>
+    </div>
+  </section>
+
+  <section class="block" id="innovation">
+    <div class="wrap">
+      <span class="eyebrow reveal"><span class="num">(06)</span> · Innovation</span>
+      <h2 class="reveal fr">Pas plus cher. <em>Plus malin.</em></h2>
+      <h2 class="reveal en">Not pricier. <em>Smarter.</em></h2>
+      <div class="grid g4" style="margin-top:40px">
+        <div class="card reveal"><span class="idx">01</span><h3 class="fr">100 % matériaux locaux</h3><h3 class="en">100% local materials</h3><p class="fr">Fût recyclé, sable de rivière, <i>makala</i>, pagne, moringa. Rien à importer.</p><p class="en">Recycled drum, river sand, <i>makala</i>, wax-print cloth, moringa. Nothing to import.</p></div>
+        <div class="card reveal" style="--d:.1s"><span class="idx">02</span><h3 class="fr">Sortie surélevée</h3><h3 class="en">Raised outlet</h3><p class="fr">Le sable reste toujours immergé, donc le biofilm qui mange les germes ne meurt pas.</p><p class="en">The sand always stays submerged, so the germ-eating biofilm never dies.</p></div>
+        <div class="card reveal" style="--d:.2s"><span class="idx">03</span><h3 class="fr">Multi-barrières</h3><h3 class="en">Multi-barrier</h3><p class="fr">Coagulation, filtration puis désinfection, pour viser les cibles de l'OMS.</p><p class="en">Coagulation, filtration, then disinfection, aiming at WHO targets.</p></div>
+        <div class="card reveal" style="--d:.3s"><span class="idx">04</span><h3 class="fr">Modèle coopératif</h3><h3 class="en">Cooperative model</h3><p class="fr">Des techniciennes locales fabriquent, vendent et entretiennent les filtres. Cela crée des emplois.</p><p class="en">Local women technicians build, sell and maintain the filters. That creates jobs.</p></div>
       </div>
+    </div>
+  </section>
+
+  <section class="block" id="suite">
+    <div class="wrap">
+      <span class="eyebrow reveal"><span class="num">(07)</span> · <span class="fr">Et maintenant</span><span class="en">What next</span></span>
+      <a class="big-cta reveal" href="#simulateur"><span class="t"><span><span class="fr">Construisez <em>votre</em> filtre</span><span class="en">Build <em>your</em> filter</span></span><span class="arr">↗</span></span><span class="s"><span class="fr">Simulateur couche par couche</span><span class="en">Layer-by-layer simulator</span></span></a>
+      <a class="big-cta reveal" href="#sensibilisation"><span class="t"><span><span class="fr">Les bons <em>gestes</em></span><span class="en">Good <em>habits</em></span></span><span class="arr">↗</span></span><span class="s"><span class="fr">Sensibilisation, idées reçues, quiz</span><span class="en">Awareness, myths, quiz</span></span></a>
+      <a class="big-cta reveal" href="#carte"><span class="t"><span><span class="fr">2 453 points <em>d'eau</em></span><span class="en">2,453 water <em>points</em></span></span><span class="arr">↗</span></span><span class="s"><span class="fr">Carte de la RDC</span><span class="en">Map of the DRC</span></span></a>
     </div>
   </section>
 </div>
@@ -346,19 +359,19 @@
       <h2 class="fr">Les trois étapes</h2><h2 class="en">The three stages</h2>
       <div class="stage-cards" style="margin-top:18px">
         <div class="card stage s1">
-          <span class="tag"><span class="fr">Étape 1 · Pré-traitement</span><span class="en">Stage 1 · Pre-treatment</span></span>
+          <span class="big">01</span><span class="tag"><span class="fr">Étape 1 · Pré-traitement</span><span class="en">Stage 1 · Pre-treatment</span></span>
           <h3 style="margin-top:8px" class="fr">Décanter et clarifier</h3><h3 style="margin-top:8px" class="en">Settle and clarify</h3>
           <ol class="fr"><li>Remplir le seau 1 d'eau brute.</li><li>Ajouter environ 1 graine de moringa broyée par litre d'eau très trouble. Ajuster la dose avec un test en bocal.</li><li>Remuer vite 1 min, puis lentement 5 min.</li><li>Laisser reposer 1 à 2 h, couvercle fermé.</li><li>Verser doucement l'eau du dessus à travers le pagne, sans remuer la boue.</li></ol>
           <ol class="en"><li>Fill bucket 1 with raw water.</li><li>Add about 1 crushed moringa seed per litre of very turbid water. Adjust the dose with a jar test.</li><li>Stir fast for 1 min, then slowly for 5 min.</li><li>Let it rest 1–2 h with the lid closed.</li><li>Gently pour the top water through the cloth, without stirring up the sludge.</li></ol>
         </div>
         <div class="card stage">
-          <span class="tag"><span class="fr">Étape 2 · Filtration</span><span class="en">Stage 2 · Filtration</span></span>
+          <span class="big">02</span><span class="tag"><span class="fr">Étape 2 · Filtration</span><span class="en">Stage 2 · Filtration</span></span>
           <h3 style="margin-top:8px" class="fr">Filtre biosable + charbon</h3><h3 style="margin-top:8px" class="en">Biosand + charcoal filter</h3>
           <ul class="fr"><li>Fût alimentaire de 60 L posé sur une plateforme.</li><li>Lit filtrant de 45 cm : sable fin, tissu, charbon, sable grossier et gravier.</li><li>On verse 12 L par remplissage, 2 à 3 fois par jour.</li><li>Débit visé : 0,4 L/min au maximum.</li><li>Ne jamais laisser sécher le filtre plus de 48 h.</li></ul>
           <ul class="en"><li>60 L food-grade drum on a platform.</li><li>45 cm filter bed: fine sand, cloth, charcoal, coarse sand and gravel.</li><li>12 L per fill, 2–3 fills per day.</li><li>Target flow: 0.4 L/min at most.</li><li>Never let the filter dry out for more than 48 h.</li></ul>
         </div>
         <div class="card stage s3">
-          <span class="tag"><span class="fr">Étape 3 · Désinfection</span><span class="en">Stage 3 · Disinfection</span></span>
+          <span class="big">03</span><span class="tag"><span class="fr">Étape 3 · Désinfection</span><span class="en">Stage 3 · Disinfection</span></span>
           <h3 style="margin-top:8px" class="fr">Désinfecter et bien stocker</h3><h3 style="margin-top:8px" class="en">Disinfect and store safely</h3>
           <ul class="fr"><li><b>Chlore</b> : 1 comprimé pour 20 L (selon la notice) ou eau de Javel diluée, puis 30 min d'attente.</li><li><b>SODIS</b> : bouteilles PET de 2 L au plus, 6 h de plein soleil.</li><li>Le filtre clarifie d'abord l'eau, ce qui rend le chlore et le soleil <b>bien plus efficaces</b>.</li><li>Seau avec couvercle et robinet, nettoyé chaque semaine.</li></ul>
           <ul class="en"><li><b>Chlorine</b>: 1 tablet per 20 L (follow the label) or diluted bleach, then 30 min of waiting.</li><li><b>SODIS</b>: PET bottles of 2 L at most, 6 h of full sun.</li><li>The filter clarifies the water first, which makes chlorine and sunlight <b>far more effective</b>.</li><li>Bucket with lid and tap, cleaned weekly.</li></ul>
@@ -774,9 +787,10 @@
 </main>
 
 <footer>
-  <div class="wrap">
-    <span><b>Mayi Peto</b> · <span class="fr">Projet étudiant</span><span class="en">Student project</span> — IMT Atlantique FISE A2 · Engineers Without Borders</span>
-    <span><span class="fr">Carte</span><span class="en">Map</span> © OpenStreetMap contributors · <span class="fr">Simulateur pédagogique : ne remplace pas une analyse d'eau</span><span class="en">Teaching simulator: not a substitute for water testing</span></span>
+  <div class="marquee ghost" aria-hidden="true"><div class="track"><div class="item"><span>Mayi Peto</span><span>✦</span><span>Mayi Peto</span><span>✦</span></div></div></div>
+  <div class="wrap meta">
+    <span><span class="fr">Projet étudiant</span><span class="en">Student project</span> · IMT Atlantique FISE A2 · Engineers Without Borders</span>
+    <span><span class="fr">Carte</span><span class="en">Map</span> © OpenStreetMap · <span class="fr">Simulateur pédagogique</span><span class="en">Teaching simulator</span></span>
   </div>
 </footer>
 
@@ -785,5 +799,6 @@
 <script src="js/main.js"></script>
 <script src="js/simulator.js"></script>
 <script src="js/map.js"></script>
+<script src="js/motion.js"></script>
 </body>
 </html>

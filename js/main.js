@@ -22,24 +22,24 @@
     listeners.forEach((cb) => cb(l));
   });
 
-  // ---------- Thème ----------
-  document.getElementById('theme-btn').addEventListener('click', () => {
-    const cur = root.getAttribute('data-theme') ||
-      (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    const next = cur === 'dark' ? 'light' : 'dark';
-    root.setAttribute('data-theme', next);
-    store('mp-theme', next);
-  });
-
   // ---------- Navigation par onglets (hash) ----------
+  // MP.transition(id, swap), défini dans motion.js, joue le rideau animé entre deux onglets.
   const pages = ['accueil', 'filtre', 'simulateur', 'sensibilisation', 'carte', 'projet'];
+  let current = null;
   function route() {
     const h = (location.hash || '#accueil').slice(1).split('?')[0];
     const id = pages.includes(h) ? h : 'accueil';
-    document.querySelectorAll('.page').forEach((p) => p.classList.toggle('active', p.id === 'p-' + id));
-    document.querySelectorAll('.nav a').forEach((a) => a.classList.toggle('active', a.dataset.page === id));
-    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
-    MP.onPage.forEach((cb) => cb(id));
+    const swap = () => {
+      document.querySelectorAll('.page').forEach((p) => p.classList.toggle('active', p.id === 'p-' + id));
+      document.querySelectorAll('.nav a').forEach((a) => a.classList.toggle('active', a.dataset.page === id));
+      document.documentElement.style.scrollBehavior = 'auto';
+      window.scrollTo(0, 0);
+      document.documentElement.style.scrollBehavior = '';
+      MP.onPage.forEach((cb) => cb(id));
+    };
+    if (current !== null && current !== id && MP.transition) MP.transition(id, swap);
+    else swap();
+    current = id;
   }
   window.addEventListener('hashchange', route);
   document.addEventListener('DOMContentLoaded', route);

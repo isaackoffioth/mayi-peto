@@ -31,7 +31,15 @@ Le système fonctionne par gravité, en trois étapes et sans électricité :
 | Carte | 2 453 points d'eau de RDC issus d'OpenStreetMap |
 | Le projet | PESTLE, plan de mise en œuvre, partenaires, sources |
 
-Le site est bilingue (FR/EN) et propose un thème clair/sombre. C'est un site statique : HTML, CSS et JavaScript, sans étape de compilation.
+Le site est bilingue (FR/EN). C'est un site statique : HTML, CSS et JavaScript, sans étape de compilation.
+
+**Style :** design éditorial sombre (grandes capitales grotesk, italique serif, étiquettes en mono, une couleur d'accent cyan). Le motion design est dans `js/motion.js` :
+
+- apparitions au défilement et titres révélés ligne par ligne
+- texte qui s'allume mot à mot, compteurs animés et parallaxe
+- bandeau défilant, barre de progression, curseur personnalisé et rideau animé entre les onglets
+
+Les animations sont désactivées si le système demande de réduire les animations. Pour changer la couleur d'accent, modifiez `--accent` dans `css/style.css`.
 
 ### Lancer en local
 
