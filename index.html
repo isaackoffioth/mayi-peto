@@ -16,8 +16,9 @@
 <script>
   // Langue et thème avant affichage (évite le clignotement)
   (function () {
-    var l = null;
-    try { l = localStorage.getItem('mp-lang'); } catch (e) {}
+    var l = null, t = null;
+    try { l = localStorage.getItem('mp-lang'); t = localStorage.getItem('mp-theme'); } catch (e) {}
+    document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
     if (!l) l = (navigator.language || 'fr').slice(0, 2) === 'fr' ? 'fr' : 'en';
     document.documentElement.setAttribute('data-lang', l);
     document.documentElement.lang = l;
@@ -186,6 +187,7 @@
     </nav>
     <div class="tools">
       <button class="chip-btn" id="lang-btn" type="button" aria-label="Changer de langue / Change language"><span class="fr">EN</span><span class="en">FR</span></button>
+      <button class="chip-btn" id="theme-btn" type="button" aria-label="Fond blanc / fond noir">◐</button>
     </div>
   </div>
 </header>
@@ -201,7 +203,7 @@
       <span class="eyebrow lm"><span>Engineers Without Borders · IMT Atlantique · <span class="fr">RD Congo</span><span class="en">DR Congo</span> · 2026</span></span>
       <h1 class="fr"><span class="lm"><span style="--d:.1s">De l'eau</span></span><span class="lm"><span style="--d:.2s">trouble à</span></span><span class="lm"><span style="--d:.3s">l'eau <em>peto.</em></span></span></h1>
       <h1 class="en"><span class="lm"><span style="--d:.1s">From muddy</span></span><span class="lm"><span style="--d:.2s">water to</span></span><span class="lm"><span style="--d:.3s"><em>peto</em> water.</span></span></h1>
-      <p class="lead reveal" style="--d:.5s"><span class="fr"><b>Mayi Peto</b> (« eau propre » en lingala) est un purificateur à gravité fait de seaux, de sable, de charbon, de pagne et de graines de moringa. Il est conçu pour les villages de RDC, coûte environ 15 $ et n'utilise aucune électricité.</span><span class="en"><b>Mayi Peto</b> (“clean water” in Lingala) is a gravity purifier made of buckets, sand, charcoal, wax-print cloth and moringa seeds. It is designed for villages in the DRC, costs about $15 and uses no electricity.</span></p>
+      <p class="lead reveal" style="--d:.5s"><span class="fr"><b>Mayi Peto</b> (« eau propre » en lingala) est un purificateur à gravité fait de seaux, de sable, de charbon, de pagne et de graines de moringa. Il est conçu pour les villages de RDC, coûte environ <span class="price" data-usd="14.7" data-f="round"></span> et n'utilise aucune électricité.</span><span class="en"><b>Mayi Peto</b> (“clean water” in Lingala) is a gravity purifier made of buckets, sand, charcoal, wax-print cloth and moringa seeds. It is designed for villages in the DRC, costs about <span class="price" data-usd="14.7" data-f="round"></span> and uses no electricity.</span></p>
       <div class="btn-row reveal" style="--d:.65s">
         <a class="btn" href="#filtre"><span class="fr">Découvrir le filtre</span><span class="en">Discover the filter</span> <span class="arr">→</span></a>
         <a class="btn ghost" href="#simulateur"><span class="fr">Construire mon filtre</span><span class="en">Build my filter</span></a>
@@ -211,7 +213,7 @@
   </section>
 
   <div class="marquee" aria-hidden="true"><div class="track">
-    <div class="item"><span>0 <em class="fr">électricité</em><em class="en">electricity</em></span><span class="star">✦</span><span>≈ 15 $</span><span class="star">✦</span><span>30–40 L <em class="fr">par jour</em><em class="en">a day</em></span><span class="star">✦</span><span>100 % <em>local</em></span><span class="star">✦</span><span>★ <em class="fr">cibles</em><em class="en">WHO</em> <span class="fr">OMS</span><span class="en">targets</span></span><span class="star">✦</span><span class="fr">Sable · Charbon · Moringa</span><span class="en">Sand · Charcoal · Moringa</span><span class="star">✦</span></div>
+    <div class="item"><span>0 <em class="fr">électricité</em><em class="en">electricity</em></span><span class="star">✦</span><span>≈ <span class="price" data-usd="14.7" data-f="eur"></span></span><span class="star">✦</span><span>≈ <span class="price" data-usd="14.7" data-f="fc"></span></span><span class="star">✦</span><span>30–40 L <em class="fr">par jour</em><em class="en">a day</em></span><span class="star">✦</span><span>100 % <em>local</em></span><span class="star">✦</span><span>★ <em class="fr">cibles</em><em class="en">WHO</em> <span class="fr">OMS</span><span class="en">targets</span></span><span class="star">✦</span><span class="fr">Sable · Charbon · Moringa</span><span class="en">Sand · Charcoal · Moringa</span><span class="star">✦</span></div>
   </div></div>
 
   <section class="block" id="histoire" style="border-top:0">
@@ -220,7 +222,7 @@
       <div class="story-row reveal"><span class="day"><span class="fr">Jour 1</span><span class="en">Day 1</span></span><p class="fr">Maman Bijou puise l'eau de la rivière. <em>Elle est claire, ça va.</em></p><p class="en">Mama Bijou draws water from the river. <em>It looks clear, it's fine.</em></p></div>
       <div class="story-row reveal"><span class="day"><span class="fr">Jour 3</span><span class="en">Day 3</span></span><p class="fr">Son fils de 3 ans a la diarrhée. <em>Le dispensaire est à 12 km.</em></p><p class="en">Her 3-year-old son has diarrhoea. <em>The clinic is 12 km away.</em></p></div>
       <div class="story-row reveal"><span class="day"><span class="fr">Jour 7</span><span class="en">Day 7</span></span><p class="fr">Elle fait bouillir l'eau. <em>Le makala coûte cher, la fumée pique les yeux.</em></p><p class="en">She boils the water. <em>Charcoal is expensive, the smoke stings.</em></p></div>
-      <div class="story-row reveal final"><span class="day"><span class="fr">Jour 30</span><span class="en">Day 30</span></span><p class="fr">Le village construit un Mayi Peto. <em>15 $, zéro électricité, de l'eau traitée chaque jour.</em></p><p class="en">The village builds a Mayi Peto. <em>$15, zero electricity, treated water every day.</em></p></div>
+      <div class="story-row reveal final"><span class="day"><span class="fr">Jour 30</span><span class="en">Day 30</span></span><p class="fr">Le village construit un Mayi Peto. <em><span class="price" data-usd="14.7" data-f="eur"></span>, zéro électricité, de l'eau traitée chaque jour.</em></p><p class="en">The village builds a Mayi Peto. <em><span class="price" data-usd="14.7" data-f="eur"></span>, zero electricity, treated water every day.</em></p></div>
       <p class="small muted reveal" style="margin-top:20px"><span class="fr">Scénario illustratif, inspiré de situations courantes en zone rurale.</span><span class="en">Illustrative scenario, based on common rural situations.</span></p>
     </div>
   </section>
@@ -391,24 +393,24 @@
         <h2 class="fr">Coût des matériaux</h2><h2 class="en">Bill of materials</h2>
         <div class="table-wrap">
           <table>
-            <thead><tr><th><span class="fr">Élément</span><span class="en">Item</span></th><th class="num"><span class="fr">Coût ($)</span><span class="en">Cost ($)</span></th></tr></thead>
+            <thead><tr><th><span class="fr">Élément</span><span class="en">Item</span></th><th class="num"><span class="fr">Coût (€ · FC)</span><span class="en">Cost (€ · FC)</span></th></tr></thead>
             <tbody>
-              <tr><td><span class="fr">Fût alimentaire 60 L recyclé (jamais un fût chimique)</span><span class="en">Recycled 60 L food-grade drum (never a chemical drum)</span></td><td class="num">5.00</td></tr>
-              <tr><td><span class="fr">Seau 20 L + couvercle (décantation)</span><span class="en">20 L bucket + lid (settling)</span></td><td class="num">2.00</td></tr>
-              <tr><td><span class="fr">Seau 20 L + couvercle (stockage)</span><span class="en">20 L bucket + lid (storage)</span></td><td class="num">2.00</td></tr>
-              <tr><td><span class="fr">Robinet plastique</span><span class="en">Plastic tap</span></td><td class="num">1.50</td></tr>
-              <tr><td><span class="fr">Tuyau 1,5 m + coudes</span><span class="en">1.5 m pipe + elbows</span></td><td class="num">2.00</td></tr>
-              <tr><td><span class="fr">Sable fin, sable grossier, gravier (collecte + lavage)</span><span class="en">Fine sand, coarse sand, gravel (collecting + washing)</span></td><td class="num">0.50</td></tr>
-              <tr><td><span class="fr">Charbon de bois (makala), 1 kg</span><span class="en">Charcoal (makala), 1 kg</span></td><td class="num">0.50</td></tr>
-              <tr><td><span class="fr">Pagne en coton (2 morceaux)</span><span class="en">Cotton wax-print cloth (2 pieces)</span></td><td class="num">1.00</td></tr>
-              <tr><td><span class="fr">Graines de moringa (souvent gratuites)</span><span class="en">Moringa seeds (often free)</span></td><td class="num">0.20</td></tr>
-              <tr><td><span class="fr">Bouteilles PET (récupération)</span><span class="en">PET bottles (reused)</span></td><td class="num">0.00</td></tr>
+              <tr><td><span class="fr">Fût alimentaire 60 L recyclé (jamais un fût chimique)</span><span class="en">Recycled 60 L food-grade drum (never a chemical drum)</span></td><td class="num"><span class="price" data-usd="5.0" data-f="cell"></span></td></tr>
+              <tr><td><span class="fr">Seau 20 L + couvercle (décantation)</span><span class="en">20 L bucket + lid (settling)</span></td><td class="num"><span class="price" data-usd="2.0" data-f="cell"></span></td></tr>
+              <tr><td><span class="fr">Seau 20 L + couvercle (stockage)</span><span class="en">20 L bucket + lid (storage)</span></td><td class="num"><span class="price" data-usd="2.0" data-f="cell"></span></td></tr>
+              <tr><td><span class="fr">Robinet plastique</span><span class="en">Plastic tap</span></td><td class="num"><span class="price" data-usd="1.5" data-f="cell"></span></td></tr>
+              <tr><td><span class="fr">Tuyau 1,5 m + coudes</span><span class="en">1.5 m pipe + elbows</span></td><td class="num"><span class="price" data-usd="2.0" data-f="cell"></span></td></tr>
+              <tr><td><span class="fr">Sable fin, sable grossier, gravier (collecte + lavage)</span><span class="en">Fine sand, coarse sand, gravel (collecting + washing)</span></td><td class="num"><span class="price" data-usd="0.5" data-f="cell"></span></td></tr>
+              <tr><td><span class="fr">Charbon de bois (makala), 1 kg</span><span class="en">Charcoal (makala), 1 kg</span></td><td class="num"><span class="price" data-usd="0.5" data-f="cell"></span></td></tr>
+              <tr><td><span class="fr">Pagne en coton (2 morceaux)</span><span class="en">Cotton wax-print cloth (2 pieces)</span></td><td class="num"><span class="price" data-usd="1.0" data-f="cell"></span></td></tr>
+              <tr><td><span class="fr">Graines de moringa (souvent gratuites)</span><span class="en">Moringa seeds (often free)</span></td><td class="num"><span class="price" data-usd="0.2" data-f="cell"></span></td></tr>
+              <tr><td><span class="fr">Bouteilles PET (récupération)</span><span class="en">PET bottles (reused)</span></td><td class="num"><span class="price" data-usd="0.0" data-f="cell"></span></td></tr>
             </tbody>
-            <tfoot><tr><td><span class="fr">Total initial</span><span class="en">Initial total</span></td><td class="num">≈ 14.70</td></tr>
-            <tr><td><span class="fr">Fonctionnement (chlore + charbon renouvelé)</span><span class="en">Running cost (chlorine + charcoal refill)</span></td><td class="num">≈ 0.70 / <span class="fr">mois</span><span class="en">month</span></td></tr></tfoot>
+            <tfoot><tr><td><span class="fr">Total initial</span><span class="en">Initial total</span></td><td class="num">≈ <span class="price" data-usd="14.7" data-f="cell"></span></td></tr>
+            <tr><td><span class="fr">Fonctionnement (chlore + charbon renouvelé)</span><span class="en">Running cost (chlorine + charcoal refill)</span></td><td class="num">≈ <span class="price" data-usd="0.7" data-f="cell"></span> <span class="fr">/ mois</span><span class="en">/ month</span></td></tr></tfoot>
           </table>
         </div>
-        <p class="small muted" style="margin-top:8px"><span class="fr">Prix indicatifs, à vérifier sur un marché local et à convertir en francs congolais au taux du jour. Le temps de travail de la coopérative n'est pas inclus.</span><span class="en">Indicative prices, to be checked at a local market and converted into Congolese francs at the current rate. Cooperative labour is not included.</span></p>
+        <p class="small muted" style="margin-top:8px"><span class="fr">Prix indicatifs, à vérifier sur un marché local. Le temps de travail de la coopérative n'est pas inclus.</span><span class="en">Indicative prices, to be checked at a local market. Cooperative labour is not included.</span> <span class="rate-note"></span></p>
       </div>
       <div>
         <span class="eyebrow"><span class="fr">Caractéristiques</span><span class="en">Specifications</span></span>
@@ -476,10 +478,10 @@
           <tbody>
             <tr><td><span class="fr">Ébullition</span><span class="en">Boiling</span></td><td>≈ 0</td><td><span class="tag bad"><span class="fr">élevé</span><span class="en">high</span></span></td><td><span class="tag ok">++</span></td><td><span class="fr">oui</span><span class="en">yes</span></td><td><span class="fr">Combustible, déforestation, fumée, temps, recontamination</span><span class="en">Fuel, deforestation, smoke, time, recontamination</span></td></tr>
             <tr><td><span class="fr">Comprimés de chlore</span><span class="en">Chlorine tablets</span></td><td>≈ 0</td><td><span class="tag warn"><span class="fr">régulier</span><span class="en">recurring</span></span></td><td><span class="tag ok">++</span></td><td><span class="fr">non (approvisionnement)</span><span class="en">no (supply chain)</span></td><td><span class="fr">Goût rejeté, peu efficace en eau trouble, sans effet sur Cryptosporidium</span><span class="en">Taste rejected, weak in turbid water, no effect on Cryptosporidium</span></td></tr>
-            <tr><td><span class="fr">Filtre céramique</span><span class="en">Ceramic pot filter</span></td><td>≈ 15–25 $</td><td><span class="tag ok"><span class="fr">faible</span><span class="en">low</span></span></td><td><span class="tag ok">+</span></td><td><span class="fr">atelier nécessaire</span><span class="en">needs a workshop</span></td><td><span class="fr">Fragile, casse au transport</span><span class="en">Fragile, breaks in transport</span></td></tr>
-            <tr><td><span class="fr">Filtre / paille importé</span><span class="en">Imported filter / straw</span></td><td>≈ 20–60 $+</td><td><span class="tag warn"><span class="fr">cartouches</span><span class="en">cartridges</span></span></td><td><span class="tag ok">++</span></td><td><span class="fr">non</span><span class="en">no</span></td><td><span class="fr">Importé, pièces introuvables, dépendance</span><span class="en">Imported, no spare parts, dependency</span></td></tr>
-            <tr><td><span class="fr">Biosable en béton</span><span class="en">Concrete biosand</span></td><td>≈ 30–75 $</td><td><span class="tag ok"><span class="fr">très faible</span><span class="en">very low</span></span></td><td><span class="tag ok">+</span></td><td><span class="fr">oui (moule acier)</span><span class="en">yes (steel mould)</span></td><td><span class="fr">Lourd, difficile à transporter</span><span class="en">Heavy, hard to transport</span></td></tr>
-            <tr class="highlight"><td>Mayi Peto</td><td>≈ 15 $</td><td><span class="tag ok">≈ 0,7 $/<span class="fr">mois</span><span class="en">mo</span></span></td><td><span class="tag ok">++ <span class="fr">(avec désinf.)</span><span class="en">(with disinf.)</span></span></td><td><span class="fr">oui, 100 %</span><span class="en">yes, 100%</span></td><td><span class="fr">Maturation, entretien régulier, tests nécessaires</span><span class="en">Maturation, regular care, testing needed</span></td></tr>
+            <tr><td><span class="fr">Filtre céramique</span><span class="en">Ceramic pot filter</span></td><td><span class="price" data-usd="15" data-usd2="25" data-f="range"></span></td><td><span class="tag ok"><span class="fr">faible</span><span class="en">low</span></span></td><td><span class="tag ok">+</span></td><td><span class="fr">atelier nécessaire</span><span class="en">needs a workshop</span></td><td><span class="fr">Fragile, casse au transport</span><span class="en">Fragile, breaks in transport</span></td></tr>
+            <tr><td><span class="fr">Filtre / paille importé</span><span class="en">Imported filter / straw</span></td><td><span class="price" data-usd="20" data-usd2="60" data-f="range"></span>+</td><td><span class="tag warn"><span class="fr">cartouches</span><span class="en">cartridges</span></span></td><td><span class="tag ok">++</span></td><td><span class="fr">non</span><span class="en">no</span></td><td><span class="fr">Importé, pièces introuvables, dépendance</span><span class="en">Imported, no spare parts, dependency</span></td></tr>
+            <tr><td><span class="fr">Biosable en béton</span><span class="en">Concrete biosand</span></td><td><span class="price" data-usd="30" data-usd2="75" data-f="range"></span></td><td><span class="tag ok"><span class="fr">très faible</span><span class="en">very low</span></span></td><td><span class="tag ok">+</span></td><td><span class="fr">oui (moule acier)</span><span class="en">yes (steel mould)</span></td><td><span class="fr">Lourd, difficile à transporter</span><span class="en">Heavy, hard to transport</span></td></tr>
+            <tr class="highlight"><td>Mayi Peto</td><td>≈ <span class="price" data-usd="14.7" data-f="range"></span></td><td><span class="tag ok">≈ <span class="price" data-usd="0.7" data-f="eur2"></span>/<span class="fr">mois</span><span class="en">mo</span></span></td><td><span class="tag ok">++ <span class="fr">(avec désinf.)</span><span class="en">(with disinf.)</span></span></td><td><span class="fr">oui, 100 %</span><span class="en">yes, 100%</span></td><td><span class="fr">Maturation, entretien régulier, tests nécessaires</span><span class="en">Maturation, regular care, testing needed</span></td></tr>
           </tbody>
         </table>
       </div>

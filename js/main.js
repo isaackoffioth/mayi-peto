@@ -22,6 +22,63 @@
     listeners.forEach((cb) => cb(l));
   });
 
+  // ---------- Thème : fond noir ou blanc ----------
+  function setThemeIcon() {
+    const b = document.getElementById('theme-btn');
+    if (!b) return;
+    const dark = root.getAttribute('data-theme') !== 'light';
+    b.innerHTML = dark ? '<span class="fr">☀ Blanc</span><span class="en">☀ Light</span>' : '<span class="fr">☾ Noir</span><span class="en">☾ Dark</span>';
+    b.setAttribute('aria-label', dark ? MP.t('Passer en fond blanc', 'Switch to white background') : MP.t('Passer en fond noir', 'Switch to black background'));
+  }
+  document.getElementById('theme-btn').addEventListener('click', () => {
+    const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    root.setAttribute('data-theme', next);
+    store('mp-theme', next);
+    setThemeIcon();
+  });
+  setThemeIcon();
+  MP.onLang(setThemeIcon);
+
+  // ---------- Prix : euros + francs congolais ----------
+  // Les estimations de base sont en dollars US (prix des marchés en RDC), converties ici.
+  // Taux : BCC (Banque Centrale du Congo), cours moyen du 11/11/2026 ; USD→EUR mi-novembre 2026.
+  const RATE = { usdEur: 0.89, eurCdf: 2547, date: '11/11/2026' };
+  const loc = () => (MP.lang() === 'fr' ? 'fr-FR' : 'en-US');
+  const roundFc = (x, big) => { const step = big ? 1000 : (x >= 1000 ? 100 : 10); return Math.round(x / step) * step; };
+  function eur(usd, dec) {
+    const v = usd * RATE.usdEur;
+    const n = v.toLocaleString(loc(), { minimumFractionDigits: dec, maximumFractionDigits: dec });
+    return MP.lang() === 'fr' ? n + ' €' : '€' + n;
+  }
+  function fc(usd, big) {
+    return roundFc(usd * RATE.usdEur * RATE.eurCdf, big).toLocaleString(loc()) + ' FC';
+  }
+  MP.RATE = RATE;
+  // formats : full « 13,08 € · 33 300 FC » ; round « 13 € (≈ 33 000 FC) » ; eur ; eur2 ; fc ; cell (2 lignes) ; range
+  MP.money = (usd, f, usd2) => {
+    switch (f) {
+      case 'round': return `${eur(usd, 0)} (≈ ${fc(usd, true)})`;
+      case 'eur': return eur(usd, 0);
+      case 'eur2': return eur(usd, 2);
+      case 'fc': return fc(usd, true);
+      case 'cell': return `${eur(usd, 2)}<br><small class="fc">${fc(usd)}</small>`;
+      case 'range': return usd2 != null
+        ? `${eur(usd, 0)}–${eur(usd2, 0)}<br><small class="fc">${fc(usd, true).replace(' FC', '')}–${fc(usd2, true)}</small>`
+        : `${eur(usd, 0)}<br><small class="fc">≈ ${fc(usd, true)}</small>`;
+      default: return `${eur(usd, 2)} · ${fc(usd)}`;
+    }
+  };
+  function applyPrices() {
+    document.querySelectorAll('.price').forEach((el) => {
+      el.innerHTML = MP.money(parseFloat(el.dataset.usd), el.dataset.f, el.dataset.usd2 ? parseFloat(el.dataset.usd2) : null);
+    });
+    const note = MP.t(`Taux indicatifs : 1 € ≈ ${RATE.eurCdf.toLocaleString('fr-FR')} FC (Banque Centrale du Congo, ${RATE.date}).`,
+                      `Indicative rates: €1 ≈ ${RATE.eurCdf.toLocaleString('en-US')} FC (Central Bank of Congo, ${RATE.date}).`);
+    document.querySelectorAll('.rate-note').forEach((el) => { el.textContent = note; });
+  }
+  document.addEventListener('DOMContentLoaded', applyPrices);
+  MP.onLang(applyPrices);
+
   // ---------- Navigation par onglets (hash) ----------
   // MP.transition(id, swap), défini dans motion.js, joue le rideau animé entre deux onglets.
   const pages = ['accueil', 'filtre', 'simulateur', 'sensibilisation', 'carte', 'projet'];

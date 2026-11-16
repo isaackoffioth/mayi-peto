@@ -14,7 +14,7 @@
   const t = (fr, en) => MP.t(fr, en);
 
   // ---------- Matériaux ----------
-  // K : perméabilité relative (cm/min), costL : $ par litre de matériau, turb : coefficient de clarification par cm
+  // K : perméabilité relative (cm/min), costL : coût en USD par litre de matériau (converti en € et FC à l'affichage), turb : coefficient de clarification par cm
   const MAT = {
     gravel:   { fr: 'Gravier (6–12 mm)', en: 'Gravel (6–12 mm)', s: ['Gravier', 'Gravel'], K: 300, costL: 0.012, turb: 0.005, pat: 'p-gravel', sw: '#9aa0a8', min: 1, max: 15, def: 5 },
     coarse:   { fr: 'Sable grossier (1–3 mm)', en: 'Coarse sand (1–3 mm)', s: ['Sable gros', 'Coarse sand'], K: 20, costL: 0.012, turb: 0.03, pat: 'p-coarse', sw: '#d6b37a', min: 1, max: 15, def: 4 },
@@ -429,8 +429,9 @@
       </div>
       <div class="sec">
         <h3>${t('Coût indicatif', 'Indicative cost')}</h3>
-        <div class="kv"><span>${t('Investissement', 'Upfront')}</span><b>≈ ${r.cost.toFixed(2)} $</b></div>
-        <div class="kv"><span>${t('Fonctionnement', 'Running')}</span><b>≈ ${r.monthly.toFixed(2)} $/${t('mois', 'month')}</b></div>
+        <div class="kv"><span>${t('Investissement', 'Upfront')}</span><b>≈ ${MP.money(r.cost)}</b></div>
+        <div class="kv"><span>${t('Fonctionnement', 'Running')}</span><b>≈ ${MP.money(r.monthly)} /${t('mois', 'month')}</b></div>
+        <p class="small muted" style="margin:4px 0 0">${t(`1 € ≈ ${MP.RATE.eurCdf.toLocaleString('fr-FR')} FC (BCC, ${MP.RATE.date})`, `€1 ≈ ${MP.RATE.eurCdf.toLocaleString('en-US')} FC (BCC, ${MP.RATE.date})`)}</p>
       </div>
       <div class="sec">
         <h3>${t('Analyse de la conception', 'Design check')}</h3>

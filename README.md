@@ -16,7 +16,8 @@ Le système fonctionne par gravité, en trois étapes et sans électricité :
 | 2. Filtration | Fût alimentaire 60 L sur plateforme surélevée | Diffuseur, 5 cm d'eau + biofilm, **sable fin 30 cm**, tissu, **charbon (makala) 5 cm**, sable grossier 4 cm, gravier 5 cm, **sortie surélevée** |
 | 3. Désinfection | Seau 20 L fermé avec robinet | **Chlore** (30 min) ou **SODIS** (6 h de soleil) |
 
-- Coût indicatif : **≈ 15 $** à l'achat, ≈ 0,70 $/mois en fonctionnement
+- Coût indicatif : **≈ 13 € (≈ 33 000 FC)** à l'achat, ≈ 0,60 € (≈ 1 600 FC) par mois en fonctionnement
+  - Les estimations de base sont en dollars US. Le site les convertit avec 1 $ ≈ 0,89 € et 1 € ≈ 2 547 FC (taux de la Banque Centrale du Congo, 11/11/2026). Pour mettre à jour les taux, modifiez `RATE` dans `js/main.js`.
 - Débit : ≤ 0,4 L/min, soit 30–40 L/jour (famille de 5)
 - Objectif : niveau ★ « protecteur » de l'OMS **avec désinfection**. La potabilité devra être confirmée par analyse en laboratoire.
 
@@ -31,7 +32,7 @@ Le système fonctionne par gravité, en trois étapes et sans électricité :
 | Carte | 2 453 points d'eau de RDC issus d'OpenStreetMap |
 | Le projet | PESTLE, plan de mise en œuvre, partenaires, sources |
 
-Le site est bilingue (FR/EN). C'est un site statique : HTML, CSS et JavaScript, sans étape de compilation.
+Le site est bilingue (FR/EN), avec un bouton pour choisir le fond noir ou le fond blanc (le choix est mémorisé). C'est un site statique : HTML, CSS et JavaScript, sans étape de compilation.
 
 **Style :** design éditorial sombre (grandes capitales grotesk, italique serif, étiquettes en mono, une couleur d'accent cyan). Le motion design est dans `js/motion.js` :
 
